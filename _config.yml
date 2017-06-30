@@ -1,0 +1,23 @@
+port: 40000
+name: Thus Spake Manjusri
+description: notes on CyberInfrastructure, High Performance Computing and Machine Learning
+avatar: /images/manjushri.jpg
+
+permalink: pretty
+url: http://manjusri.ucsc.edu
+excerpt_separator: "<!-- more -->"
+baseurl: ""
+github: shawfdong
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+sass:
+  style: compressed
+
+exclude:
+  - LICENSE.md
+  - README.md
+  - CNAME

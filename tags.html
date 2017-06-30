@@ -1,0 +1,24 @@
+---
+layout: page
+title: Tags
+---
+
+<div class="tags">
+  {% assign sorted_tags = site.tags | sort %}
+  {% for tag in sorted_tags %}
+  <a href="#{{ tag[0] | cgi_escape }}", class="tag-box">{{ tag[0] }} <sup>{{ tag[1] | size }}</sup></a>
+  {% endfor %}
+</div>
+<div class="posts">
+  {% for tag in sorted_tags %}
+  <h2 id="{{ tag[0] | cgi_escape }}">{{ tag[0] }}</h2>
+  <ul class="post-list">
+    {% for post in tag[1] %}
+    <li>
+      <a class="post-title" href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a> | 
+      <span class="date"> {{ post.date | date: "%B %e, %Y" }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+</div>

@@ -1,0 +1,42 @@
+
+//
+// tags
+//
+
+.tags {
+  padding: 20px 0;
+  border-bottom: 1px solid $lightGrey;
+}
+
+.tag-box {
+  display: inline-block;
+  background: rgba($blue, 0.15);
+  padding: 0 .5rem;
+  margin-right: .5rem;
+  border-radius: 4px;
+  color: $blue;
+  font-family: $helveticaNeue;
+  font-size: 90%;
+  &:hover {
+    text-decoration: none;
+    background: $blue;
+    color: $white;
+  }
+}
+
+.tags a sup { 
+  vertical-align: super;
+  font-size: smaller;
+  color: silver;
+}
+
+ul.post-list {
+  list-style-type: none;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding: 0;
+}
+
+ul.post-list li {
+  padding: 0.2rem 0;
+}
