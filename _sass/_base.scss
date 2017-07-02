@@ -282,3 +282,19 @@ tbody tr:nth-child(odd) th {
   background-color: #f9f9f9;
 }
 
+//
+// Wikipedia-style TOC
+//
+#markdown-toc::before {
+    content: "Contents";
+    font-weight: bold;
+}
+#markdown-toc ul {
+    list-style: decimal;
+}
+#markdown-toc {
+    border: 1px solid #aaa;
+    padding: 1.5em;
+    list-style: decimal;
+    display: inline-block;
+}
