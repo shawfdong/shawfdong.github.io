@@ -11,7 +11,9 @@ Starting from version 10.7 (Lion), Mac OS X includes 2 firewalls: PF & Applicati
 
 PF
 --
-Mac OS X 10.6 (and earlier) came with [IPFW](https://www.freebsd.org/doc/handbook/firewalls-ipfw.html), a port of FreeBSD's stateful firewall. IPFW was deprecated in OS X 10.7, and was completely removed in OS X 10.10; it was replaced with PF. [PF](http://www.openbsd.org/faq/pf/) (Packet Filter) is OpenBSD's system for filtering TCP/IP traffic and doing Network Address Translation. PF in OS X, however, appears to be based on the [FreeBSD port of PF](https://www.freebsd.org/doc/handbook/firewalls-pf.html). Like FreeBSD 9.X and later, OS X appears to use the same version of PF as OpenBSD 4.5. **Note** that the latest OpenBSD version is 5.6 (as of January 2015); and the configuration syntax for PF changed around 4.6/4.7.
+Mac OS X 10.6 (and earlier) came with [IPFW](https://www.freebsd.org/doc/handbook/firewalls-ipfw.html), a port of FreeBSD's stateful firewall. IPFW was deprecated in OS X 10.7, and was completely removed in OS X 10.10; it was replaced with PF. [PF](http://www.openbsd.org/faq/pf/) (Packet Filter) is OpenBSD's system for filtering TCP/IP traffic and doing Network Address Translation. PF in OS X, however, appears to be based on the [FreeBSD port of PF](https://www.freebsd.org/doc/handbook/firewalls-pf.html). Like FreeBSD 9.X and later, OS X appears to use the same version of PF as OpenBSD 4.5.
+
+<p class="note">The latest OpenBSD version is 5.6 (as of January 2015); and the configuration syntax for PF changed around 4.6/4.7.</p>
 
 Apple has enhanced PF so that various system components might choose to enable and disable PF, as indicated by the following snippet in `/etc/pf.conf`:
 {% highlight plaintext %}
