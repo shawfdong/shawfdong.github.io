@@ -88,6 +88,7 @@ block drop in inet6 proto ipv6-icmp all icmp6-type echoreq
 
 **Note** there is a bug in Apple's implementation of PF! According to pfctl(8):
 > If the anchor name is terminated with a '*' character, the -s flag will recursively print all anchors in a brace delimited block.
+
 But it produces an error instead:
 {% highlight shell %}
 $ sudo pfctl -a 'com.apple/*' -sr
@@ -184,7 +185,11 @@ pass in quick proto udp to any port 5353
 block in
 pass out quick
 {% endhighlight %}
-The first rule is to allow incoming **Bonjour** traffic. In a hostile environment, e.g., a public WiFi, we'll put the above 3 lines at the end of the file to block all incoming traffic, in which case, the sub rulesets in anchor "com.apple" will have no effect! **Note** for each packet or connection evaluated by PF, *the last matching rule* in the ruleset is the one which is applied. In work environment, you can put the 3 lines right above the line:
+The first rule is to allow incoming **Bonjour** traffic. In a hostile environment, e.g., a public WiFi, we'll put the above 3 lines at the end of the file to block all incoming traffic, in which case, the sub rulesets in anchor "com.apple" will have no effect!
+
+<p class="note">For each packet or connection evaluated by PF, <em>the last matching rule</em> in the ruleset is the one which is applied.</p>
+
+In work environment, you can put the 3 lines right above the line:
 {% highlight conf %}
 anchor "com.apple/*"
 {% endhighlight %}
