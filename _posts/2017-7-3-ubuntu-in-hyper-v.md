@@ -28,55 +28,55 @@ PS C:\WINDOWS\system32> New-VMSwitch -SwitchName "InternalNAT" -SwitchType Inter
 {% endhighlight %}
 
 * Assign an IP address to the virtual NIC:
-{% highlight powershell %}
-PS C:\WINDOWS\system32> New-NetIPAddress -IPAddress 192.168.100.1 -PrefixLength 24 -InterfaceAlias "vEthernet (InternalNAT)"
+  ```powershell
+  PS C:\WINDOWS\system32> New-NetIPAddress -IPAddress 192.168.100.1 -PrefixLength 24 -InterfaceAlias "vEthernet (InternalNAT)"
 
-IPAddress         : 192.168.100.1
-InterfaceIndex    : 45
-InterfaceAlias    : vEthernet (InternalNAT)
-AddressFamily     : IPv4
-Type              : Unicast
-PrefixLength      : 24
-PrefixOrigin      : Manual
-SuffixOrigin      : Manual
-AddressState      : Tentative
-ValidLifetime     : Infinite ([TimeSpan]::MaxValue)
-PreferredLifetime : Infinite ([TimeSpan]::MaxValue)
-SkipAsSource      : False
-PolicyStore       : ActiveStore
+  IPAddress         : 192.168.100.1
+  InterfaceIndex    : 45
+  InterfaceAlias    : vEthernet (InternalNAT)
+  AddressFamily     : IPv4
+  Type              : Unicast
+  PrefixLength      : 24
+  PrefixOrigin      : Manual
+  SuffixOrigin      : Manual
+  AddressState      : Tentative
+  ValidLifetime     : Infinite ([TimeSpan]::MaxValue)
+  PreferredLifetime : Infinite ([TimeSpan]::MaxValue)
+  SkipAsSource      : False
+  PolicyStore       : ActiveStore
 
-IPAddress         : 192.168.100.1
-InterfaceIndex    : 45
-InterfaceAlias    : vEthernet (InternalNAT)
-AddressFamily     : IPv4
-Type              : Unicast
-PrefixLength      : 24
-PrefixOrigin      : Manual
-SuffixOrigin      : Manual
-AddressState      : Invalid
-ValidLifetime     : Infinite ([TimeSpan]::MaxValue)
-PreferredLifetime : Infinite ([TimeSpan]::MaxValue)
-SkipAsSource      : False
-PolicyStore       : PersistentStore
-{% endhighlight %}
+  IPAddress         : 192.168.100.1
+  InterfaceIndex    : 45
+  InterfaceAlias    : vEthernet (InternalNAT)
+  AddressFamily     : IPv4
+  Type              : Unicast
+  PrefixLength      : 24
+  PrefixOrigin      : Manual
+  SuffixOrigin      : Manual
+  AddressState      : Invalid
+  ValidLifetime     : Infinite ([TimeSpan]::MaxValue)
+  PreferredLifetime : Infinite ([TimeSpan]::MaxValue)
+  SkipAsSource      : False
+  PolicyStore       : PersistentStore
+  ```
 
 * Configure [NAT on the virtual switch](https://www.petri.com/using-nat-virtual-switch-hyper-v):
-{% highlight powershell %}
-PS C:\WINDOWS\system32> New-NetNAT -Name "NATNetwork" -InternalIPInterfaceAddressPrefix 192.168.100.0/24
+  ```powershell
+  PS C:\WINDOWS\system32> New-NetNAT -Name "NATNetwork" -InternalIPInterfaceAddressPrefix 192.168.100.0/24
 
-Name                             : NATNetwork
-ExternalIPInterfaceAddressPrefix :
-InternalIPInterfaceAddressPrefix : 192.168.100.0/24
-IcmpQueryTimeout                 : 30
-TcpEstablishedConnectionTimeout  : 1800
-TcpTransientConnectionTimeout    : 120
-TcpFilteringBehavior             : AddressDependentFiltering
-UdpFilteringBehavior             : AddressDependentFiltering
-UdpIdleSessionTimeout            : 120
-UdpInboundRefresh                : False
-Store                            : Local
-Active                           : True
-{% endhighlight %}
+  Name                             : NATNetwork
+  ExternalIPInterfaceAddressPrefix :
+  InternalIPInterfaceAddressPrefix : 192.168.100.0/24
+  IcmpQueryTimeout                 : 30
+  TcpEstablishedConnectionTimeout  : 1800
+  TcpTransientConnectionTimeout    : 120
+  TcpFilteringBehavior             : AddressDependentFiltering
+  UdpFilteringBehavior             : AddressDependentFiltering
+  UdpIdleSessionTimeout            : 120
+  UdpInboundRefresh                : False
+  Store                            : Local
+  Active                           : True
+  ```
 
 There is no native DHCP server on Windows 10&mdash;although one can install the freeware [DHCP Server for Windows](http://www.dhcpserver.de/cms/)&mdash;so I'll simply use static IP addresses on the Hyper-V virtual machines.
 
