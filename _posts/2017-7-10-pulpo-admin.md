@@ -4,7 +4,10 @@ title: Pulpo-Admin
 tags: [Ceph, Storage, Linux]
 ---
 
-The admin node of our Ceph storage cluster **Pulpos** is **pulpo-admin**.<!-- more -->
+The admin node of our Ceph storage cluster [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) is **pulpo-admin**.<!-- more -->
+
+## specifications
+* 480GB Intel SSD DC S3500 Serials (SSDSC2BB48) 
 
 ## CentOS 7 minimal install
 
