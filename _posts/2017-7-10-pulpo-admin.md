@@ -6,47 +6,58 @@ tags: [Ceph, Storage, Linux]
 
 The admin node of our Ceph storage cluster [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) is **pulpo-admin**.<!-- more -->
 
-## specifications
-* 480GB Intel SSD DC S3500 Serials (SSDSC2BB48) 
+## Hardware
+* Two 8-core [Intel Xeon E5-2620 v4](https://ark.intel.com/products/92986/Intel-Xeon-Processor-E5-2620-v4-20M-Cache-2_10-GHz) processors @ 2.1 GHz
+* 32GB DDR4 memory @ 2400 MHz
+* 480GB [Intel DC S3500 Series](http://ark.intel.com/products/series/74935/Intel-SSD-DC-S3500-Series) SSD
+* [Intel X520-DA2 10GbE adapter](http://ark.intel.com/products/39776/Intel-Ethernet-Converged-Network-Adapter-X520-DA2), with 2 SFP+ ports
+* [Supermicro 6028TP-HTR](https://www.supermicro.com/products/system/2u/6028/sys-6028tp-htr.cfm) 2U Quad-Nodes chassis
 
-## CentOS 7 minimal install
+## Software
+1) Performe a minimal installation of CentOS 7 on *pulpo-admin*.
 
-### Update CentOS 7
-{% highlight shell %}
-[root@pulpo-admin ~]# yum update
-{% endhighlight %}
-Then reboot.
-
-### Selinux
-Disable Selinux by changing the following line in **/etc/selinux/config**:
-{% highlight conf %}
+2) Disable Selinux by changing the following line in `/etc/selinux/config`:
+```conf
 SELINUX=enforcing
-{% endhighlight %}
+```
 to:
-{% highlight conf %}
+```conf
 SELINUX=disabled
-{% endhighlight %}
-Then reboot the node.
+```
 
-### sshd
-Next we modify **/etc/ssh/sshd_config** to configure the OpenSSH server.
-* Disable password authentication by changing the following line:
-  ```conf
-  PasswordAuthentication yes
-  ```
-  to
-  ```conf
-  PasswordAuthentication no
-  ```
-* Disable GSSAPI authentication by changing the following line:
-  ```conf
-  GSSAPIAuthentication yes
-  ```
-  to:
-  ```conf
-  GSSAPIAuthentication no
-  ```
-* Then restart sshd
-  ```shell
-  [root@pulpo-admin ~]# systemctl restart sshd
-  ```
+3) After copying SSH keys to the host, disable password authentication of SSH by changing the following line in `/etc/ssh/sshd_config`:
+```conf
+PasswordAuthentication yes
+```
+to
+```conf
+PasswordAuthentication no
+```
+
+4) Disable GSSAPI authentication of SSH by changing the following line in `/etc/ssh/sshd_config`:
+```conf
+GSSAPIAuthentication yes
+```
+to:
+```conf
+GSSAPIAuthentication no
+```
+
+5) Update all packages:
+```shell
+[root@pulpo-admin ~]# yum -y update
+```
+
+6) Install the package `net-tools`, which contains basic networking tools, including *ifconfig*, *netstat*, *route*, and others:
+```shell
+[root@pulpo-admin ~]# yum install -y net-tools
+```
+
+7) Install the package `bind-utils`, which contains a collection of utilities for querying DNS servers, including *dig*, *nslookup*, and others:
+```shell
+[root@pulpo-admin ~]# yum install -y bind-utils
+```
+
+8) Reboot.
+
+**NOTE** *hyper-threading* is enabled on pulpo-admin, as well as on all the other nodes in the Pulpos cluster.
