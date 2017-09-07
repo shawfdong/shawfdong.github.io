@@ -4,7 +4,7 @@ title: Tentakel
 tags: [Linux, Provisioning]
 ---
 
-**Tentakel** is a program for executing the same command on many hosts in parallel using various remote methods.<!-- more --> Tentakel is bundled with the [Rocks](http://www.rocksclusters.org/wordpress/) cluster toolkit; so it should be familiar to Rocks users. In my humble option, Tentakel has been largely superseded by [Ansible]({{ site.baseurl }}{% post_url 2017-7-13-ansible %}), which can easily do everything Tentakel does, and many more things that Tentakel doesn't.
+**Tentakel** is a program for executing the same command on many hosts in parallel using various remote methods.<!-- more --> Tentakel is bundled with the [Rocks](http://www.rocksclusters.org/wordpress/) cluster toolkit; so it should be familiar to Rocks users. In my humble option, Tentakel has been largely superseded by [Ansible]({{ site.baseurl }}{% post_url 2017-7-13-ansible %}), which can easily do everything Tentakel can, and many more things that Tentakel can't.
 
 ## Installing Tentakel
 [https://github.com/sfermigier/tentakel] is written in Python. So the easiest way to install Tentakel is to use [pip](https://pip.pypa.io/en/stable/).
@@ -41,8 +41,8 @@ group mds ()
 
 group osd ()
   +192.168.1.5
-  +192.168.1.5
-  +192.168.1.5
+  +192.168.1.6
+  +192.168.1.7
 ```
 
 ## Testing Tentakel
