@@ -54,7 +54,7 @@ Below are the configurations for the first GE NIC on each node:
 | osd03 | 0C:C4:7A:28:4D:5A | 192.168.1.7 |
 
 ## Cluster Network
-Each OSD node has an additional single-port [ConnectX-3 Pro 10/40/56GbE Adapter](http://www.mellanox.com/page/products_dyn?product_family=162), showing up as `ens2` in CentOS 7. These adapters are connected to the 40GbE ports 50-52 of our whitebox switch `sw7175-100-pica8-1`. The VLAN ID of those switch ports is 4000.
+Each OSD node has an additional single-port [Mellanox ConnectX-3 Pro 10/40/56GbE Adapter](http://www.mellanox.com/page/products_dyn?product_family=162), showing up as `ens2` in CentOS 7. These adapters are connected to the 40GbE ports 50-52 of our whitebox switch `sw7175-100-pica8-1`. The VLAN ID of those switch ports is 4000.
 
 | Node  | MAC Address       | IP Address   |
 | :---: |:-----------------:| :-----------:|
