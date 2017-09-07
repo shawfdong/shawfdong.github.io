@@ -60,4 +60,9 @@ GSSAPIAuthentication no
 
 8) Reboot.
 
+9) Remove the old kernel:
+```shell
+[root@pulpo-admin ~]# yum erase -y kernel-3.10.0-514.el7.x86_64
+```
+
 **NOTE** *hyper-threading* is enabled on pulpo-admin, as well as on all the other nodes in the Pulpos cluster.
