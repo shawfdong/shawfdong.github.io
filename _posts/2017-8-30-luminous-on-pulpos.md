@@ -4,7 +4,7 @@ title: Installing Ceph v12.2 (Luminous) on Pulpos
 tags: [Ceph, Storage, Provisioning]
 ---
 
-In this post, we describe how we installed Ceph v12.2 (codenamed **Luminous**) on the [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) cluster.<!-- more -->
+In this post, we describe how we installed Ceph v12.2 (codename **Luminous**) on the [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) cluster.<!-- more -->
 
 In a surprising move, Red Hat released Ceph 12.2.0 on August 29, 2017, way ahead of their original schedule &mdash; Luminous was originally planned for release in Spring 2018! Luminous is the current [Long Term Stable (LTS) release](http://docs.ceph.com/docs/master/releases/) of Ceph, replacing both previous stable release *Kraken* (Ceph v11.2) and previous LTS release Jewel (Ceph v10.2). Luminous has [introduced many major](http://docs.ceph.com/docs/master/release-notes/#v12-2-0-luminous) changes from Kraken and Jewel; upgrade from earlier release is non-trivial. So we'll perform a clean re-installation of Luminous on Pulpos.
 

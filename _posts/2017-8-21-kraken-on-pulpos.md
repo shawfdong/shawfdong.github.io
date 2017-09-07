@@ -4,7 +4,7 @@ title: Installing Ceph v11.2 (Kraken) on Pulpos
 tags: [Ceph, Storage, Provisioning]
 ---
 
-In this post, we describe how we installed Ceph v11.2 (codenamed **Kraken**) on the [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) cluster.<!-- more -->
+In this post, we describe how we installed Ceph v11.2 (codename **Kraken**) on the [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) cluster.<!-- more -->
 
 As of this writing, the current stable [release of Ceph](http://docs.ceph.com/docs/master/releases/) is Kraken (Ceph v11.2). Kraken, however, is not an LTS (Long Term Stable) release. So Kraken will only be maintained with bugfixes and backports until the next stable release, Luminous, is completed in the Spring of 2017. Every other stable release of Ceph is a LTS (Long Term Stable) and will receive updates until two LTS are published. The current Ceph LTS is Jewel (Ceph v10.2); and the next stable release, Luminous (Ceph v12.2), will be an LTS as well.
 
