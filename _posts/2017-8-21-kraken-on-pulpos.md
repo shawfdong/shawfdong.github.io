@@ -247,7 +247,9 @@ Let's see if we have achieved our goals:
 /dev/sdl :
  /dev/sdl1 ceph data, active, cluster ceph, osd.11, journal /dev/nvme0n1p12
 ```
-It looks about right! **NOTE** each journal partition is only 5GB in size. So there is plenty of space left on the first NVMe SSD (the total capacity is 1.1TB). We may create a new partition there to benchmark the NVMe SSD in the near future.
+It looks about right!
+
+<p class="note">Each journal partition is only 5GB in size. So there is plenty of space left on the first NVMe SSD (the total capacity is 1.1TB). We may create a new partition there to benchmark the NVMe SSD in the near future.</p>
 
 ## Changing pg_num
 Let's check the health of the Ceph cluster:

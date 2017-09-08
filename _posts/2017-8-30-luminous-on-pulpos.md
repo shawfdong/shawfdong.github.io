@@ -148,7 +148,7 @@ It seems that we can only add one at a time.
 ```shell
 [root@pulpo-admin Pulpos]# ceph-deploy mgr create pulpo-mon01 pulpo-mds01 pulpo-admin
 ```
-**NOTE** `ceph-mgr` is new daemon introduced in Luminous, and is a required part of any Luminous deployment.
+<p class="note"><em>ceph-mgr</em> is new daemon introduced in Luminous, and is a required part of any Luminous deployment.</p>
 
 ## Adding OSDs
 1) [List the disks](http://docs.ceph.com/docs/luminous/rados/deployment/ceph-deploy-osd/#list-disks) on the OSD nodes:
@@ -276,7 +276,7 @@ Let's verify we have achieved our goals:
  /dev/sdl1 ceph data, active, cluster ceph, osd.11, block /dev/sdl2, block.db /dev/nvme0n1p23, block.wal /dev/nvme0n1p24
  /dev/sdl2 ceph block, for /dev/sdl1
 ```
-**NOTE** each DB partition is only 1GB in size and each WAL partition is only 576MB. So there is plenty of space left on the first NVMe SSD (the total capacity is 1.1TB). We may create a new partition there to benchmark the NVMe SSD in the near future.
+<p class="note">Each DB partition is only 1GB in size and each WAL partition is only 576MB. So there is plenty of space left on the first NVMe SSD (the total capacity is 1.1TB). We may create a new partition there to benchmark the NVMe SSD in the near future.</p>
 
 Let's chech the cluster status:
 ```shell

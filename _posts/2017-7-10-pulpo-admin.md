@@ -65,4 +65,10 @@ GSSAPIAuthentication no
 [root@pulpo-admin ~]# yum erase -y kernel-3.10.0-514.el7.x86_64
 ```
 
-**NOTE** *hyper-threading* is enabled on pulpo-admin, as well as on all the other nodes in the Pulpos cluster.
+10) Create a pair of SSH keys of type `ed25519` for *root*:
+```shell
+[root@pulpo-admin ~]# cd ~/.ssh
+[root@pulpo-admin .ssh]# ssh-keygen -t ed25519
+```
+
+<p class="note"><em>hyper-threading</em> is enabled on pulpo-admin, as well as on all the other nodes in the Pulpos cluster.</p>
