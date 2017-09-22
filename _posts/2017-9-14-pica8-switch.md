@@ -6,6 +6,9 @@ tags: [Network, Linux, Security]
 
 A [white box switch](http://searchsdn.techtarget.com/definition/white-box-switch), [QuantaMesh BMS T3048-LY2R](https://www.qct.io/product/index/Networking/Bare-Metal-Switch/Leaf-Switch/QuantaMesh-BMS-T3048-LY2R), provides networking connectivity to the Ceph storage cluster **Pulpos**. We runs Pica8 [PicOS](http://www.pica8.com/products/picos) on the switch.<!-- more --> QuantaMesh BMS switches can also run other Network OSes, such as [Cumulus](http://cumulusnetworks.com/cumulus-linux/overview/#cl-architecture).
 
+* Table of Contents
+{:toc}
+
 ## Hardware Specifications
 QuantaMesh BMS T3048-LY2R is a 1U top top-of-rack switch, based on the Broadcom [Trident+](https://people.ucsc.edu/~warner/Bufs/trident) ([BCM56840 Series](https://www.broadcom.com/products/Switching/Carrier-and-Service-Provider/BCM56840-Series)) switching fabric, with:
 * 48x 10GbE SFP+ ports
@@ -59,7 +62,7 @@ References:
 * [PicOS OVS Configuration Guide](http://www.pica8.com/wp-content/uploads/2015/09/v2.9/html/ovs-configuration-guide/)
 * [PicOS Openflow Tutorials](http://www.pica8.com/wp-content/uploads/2015/09/v2.9/html/openflow-tutorials/)
 
-## Accessing the Pica8 switch
+## Accessing the Pica8 Switch
 The Pica8 switch is heavily guarded. In order to gain remote access to the switch, one needs to go through the following steps:
 
 1) Enter [Data Center VPN](https://its.ucsc.edu/vpn/index.html) (vpn-dc.ucsc.edu), using [Cisco AnyConnect](https://its.ucsc.edu/vpn/installation.html). Data Center VPN requires [Multi-Factor Authentication (MFA)](https://its.ucsc.edu/mfa/index.html). To authenticate to Data Center VPN, one needs to provide both the CruzID **Gold** password and a One-Time Passcode (OTP). [Duo](https://duo.com/) is the vendor that facilitates the passcodes for MFA at UCSC.
