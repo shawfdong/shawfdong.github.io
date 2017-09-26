@@ -6,6 +6,9 @@ tags: [Linux, Provisioning]
 
 In this post I describe how we set up a home-brew environment for automated installation of CentOS 7 on the nodes of our Ceph storage cluster [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}).<!-- more --> For bigger deployment, one might want to look into a more sophisticated provisioning system like [Cobbler](http://cobbler.github.io/).
 
+* Table of Contents
+{:toc}
+
 ## Apache HTTP server
 First we install the Apache HTTP server on [pulpo-admin]({{ site.baseurl }}{% post_url 2017-7-10-pulpo-admin %}).
 1. Install Apache HTTP server:
