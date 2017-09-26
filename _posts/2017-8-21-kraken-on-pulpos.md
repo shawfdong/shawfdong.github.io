@@ -1098,7 +1098,7 @@ There are 2 options to automate mounting ceph-fuse: `fstab` or `systemd`.
 
 1) We can add the following to `/etc/fstab` (see [http://docs.ceph.com/docs/kraken/cephfs/fstab/#fuse](http://docs.ceph.com/docs/kraken/cephfs/fstab/#fuse)):
 ```conf
-id=admin  /mnt/pulpos  fuse.ceph  defaults,_netdev  0  2
+id=admin  /mnt/pulpos  fuse.ceph  defaults,_netdev  0  0
 ```
 
 2) `ceph-fuse@.service` and `ceph-fuse.target` systemd units are available. To mount CephFS as a FUSE on `/mnt/pulpos`, using *systemctl*:
