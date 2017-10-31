@@ -9,9 +9,9 @@ In this post, we describe how to compile and run [Dr. Stephan Stellmach](http://
 I copied the tarball for PADDI `PADDI_10.1_dist.tgz` from Hyades to Stampede2. The tarball contains generic x86-64 libraries and executable that have been compiled with Intel MPI and Intel Compilers. Since KNL processors offer binary compatibility with Intel Xeon processors, legacy x86-64 binaries can run on KNL nodes without recompilation. However, those binaries won't take advantage of KNL's unique features (such as AVX 512), and therefore won't run at optimal speed on KNL nodes. We'll recompile PADDI for the KNL microarchitecture.
 
 Unpack the tarball in the home directory on Stampede2:
-```shell
+{% highlight shell %}
 $ tar xvfz PADDI_10.1_dist.tgz
-```
+{% endhighlight %}
 
 * Table of Contents
 {:toc}
@@ -35,36 +35,36 @@ According to the `README` file, PADDI depends upon the following libraries:
 TACC provides optimized builds for *FFTW3* & *Parallel NetCDF* on Stampede2 and we'll simply use them. We'll only need to recompile *jutils*.
 
 Note that TACC uses [LMOD](https://www.tacc.utexas.edu/research-development/tacc-projects/lmod) to manage software on Stampede2. LMOD is similar to the module utility deployed on Hyades and NERSC supercomputers. You can list currently loaded modules with:
-```shell
+{% highlight shell %}
 $ module list
 
 Currently Loaded Modules:
   1) intel/17.0.4   3) git/2.9.0       5) python/2.7.13   7) TACC
   2) impi/17.0.3    4) autotools/1.1   6) xalt/1.7.7
-```
+{% endhighlight %}
 
 ### FFTW3
 To see what FFTW packages are available:
-```shell
+{% highlight shell %}
 $ module avail fftw
 
 -------------------- /opt/apps/intel17/impi17_0/modulefiles --------------------
    fftw2/2.1.5    fftw3/3.3.6
-```
+{% endhighlight %}
 
 **fftw3** is what we need. To learn more about it:
-```shell
+{% highlight shell %}
 $ module show fftw3
-```
+{% endhighlight %}
 
 To load the *fftw3* module (note we only need to load the module when we compile PADDI, we *don't* need to load it when running PADDI):
-```shell
+{% highlight shell %}
 $ module load fftw3
-```
+{% endhighlight %}
 
 ### Parallel netCDF (PnetCDF)
 To see what NetCDF packages are avaiable:
-```shell
+{% highlight shell %}
 $ module avail netcdf
 
 -------------------- /opt/apps/intel17/impi17_0/modulefiles --------------------
@@ -72,7 +72,7 @@ $ module avail netcdf
 
 ------------------------ /opt/apps/intel17/modulefiles -------------------------
    netcdf/4.3.3.1
-```
+{% endhighlight %}
 
 The choices can be confusing, so a brief explanation is in order:
 1. **parallel-netcdf** is parallel version of NetCDF4 based upon parallel hdf5; and it is *not* what we need
@@ -80,28 +80,28 @@ The choices can be confusing, so a brief explanation is in order:
 3. **netcdf** is the serial version of NetCDF4
 
 To learn more about the *pnetcdf* module:
-```shell
+{% highlight shell %}
 $ module show pnetcdf
-```
+{% endhighlight %}
 
 To load the *pnetcdf* module (note we only need to load the module when we compile PADDI, we *don't* need to load it when running PADDI):
-```shell
+{% highlight shell %}
 $ module load pnetcdf
-```
+{% endhighlight %}
 
 ### jutils
 We'll recompile *jutils*. Go the source directory:
-```shell
+{% highlight shell %}
 $ cd stuff_needed/lib_src/jutils
-```
+{% endhighlight %}
 
 Clean up the old build:
-```shell
+{% highlight shell %}
 $ make clean
-```
+{% endhighlight %}
 
 Modify `Makefile` so that it will have the following contents (note that we simply add the `-xCORE-AVX2 -axMIC-AVX512` compiler flags):
-```make
+{% highlight make %}
 FC            = ifort
 CFLAGS        = -O2 -xCORE-AVX2 -axMIC-AVX512 -Ijpeg12 -D_GNU_SOURCE  -DUSE12B -I.
 FFLAGS        = -xCORE-AVX2 -axMIC-AVX512
@@ -250,27 +250,27 @@ update:         $(DEST)/$(PROGRAM)
 $(DEST)/$(PROGRAM): $(SRCS) $(LIBS) $(HDRS) $(EXTHDRS)
                 @make -f $(MAKEFILE) DEST=$(DEST) install
 ###
-```
+{% endhighlight %}
 
 Copy the newly built libraries:
-```shell
+{% highlight shell %}
 $ cp libjc.a ../../lib/
 $ cp jpeg12/libjpeg.a ../../lib/
-```
+{% endhighlight %}
 
 ## Compiling PADDI
 Go to source directory for PADDI:
-```shell
+{% highlight shell %}
 $ cd ../../../main/src
-```
+{% endhighlight %}
 
 Clean up the old build:
-```shell
+{% highlight shell %}
 $ make totalclean
-```
+{% endhighlight %}
 
 Modify `Makefile` so that the first few lines will look as follows (the rest being the same as original):
-```make
+{% highlight make %}
 DEFS          = -DDOUBLE_PRECISION -DMPI_MODULE -DAB_BDF3 -DTEMPERATURE_FIELD -DCHEMICA
 L_FIELD
 
@@ -291,19 +291,19 @@ LIBS          =
 
 ADDLIBS       = -Wl,-rpath,${TACC_FFTW3_LIB} -L${TACC_FFTW3_LIB} -lfftw3f_mpi -lfftw3 -
 L${TACC_PNETCDF_LIB} -lpnetcdf -L../../stuff_needed/lib -ljc -ljpeg -lirc
-```
+{% endhighlight %}
 
 Recompile PADDI
-```shell
+{% highlight shell %}
 $ make
-```
+{% endhighlight %}
 It succeeded without a hitch!
 
 ## Running PADDI
-Copy the executable (in this case, `double_diff_double_3D`) and other requiste files to your $SCRATCH directory.
+Copy the executable (in this case, `double_diff_double_3D`) and other requisite files to your $SCRATCH directory.
 
 PADDI is a pure MPI code. So we can write a SLURM job script based upon [the sample MPI job script in the user guide](https://portal.tacc.utexas.edu/user-guides/stampede2#submitting-batch-jobs-with-sbatch):
-```shell
+{% highlight shell %}
 #!/bin/bash
 #SBATCH -J DDtest           # Job name
 #SBATCH -o DDtest.o%j       # Name of stdout output file
@@ -316,7 +316,7 @@ PADDI is a pure MPI code. So we can write a SLURM job script based upon [the sam
 #SBATCH --mail-type=all    # Send email at begin and end of job
 
 ibrun ./double_diff_double_3D <sample_parameter_file
-```
+{% endhighlight %}
 Here we request 4 KNL nodes, and we run 64 MPI tasks per node (256 MPI tasks in total). There are 68 cores per node, so you should not run more than 68 MPI tasks per node. You might, however, want to run few tasks per node.
 
 Use **sbatch** to submit your job.
