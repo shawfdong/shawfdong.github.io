@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Docker on Hydra
-tags: [Docker, CUDA]
+tags: [Docker, CUDA, GPU]
 ---
 
 In this post, we document how we installed [Docker](https://docs.docker.com/) on the 4-GPU workstation [Hydra]({{ site.baseurl }}{% post_url 2017-7-28-hydra %}).<!-- more -->
