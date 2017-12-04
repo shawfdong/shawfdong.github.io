@@ -9,18 +9,19 @@ tags: [Linux, Provisioning]
 ## Installing Tentakel
 [https://github.com/sfermigier/tentakel] is written in Python. So the easiest way to install Tentakel is to use [pip](https://pip.pypa.io/en/stable/).
 
-1. Install [pip](https://pip.pypa.io/en/stable/installing/):
-```shell
+1) Install [pip](https://pip.pypa.io/en/stable/installing/):
+{% highlight shell_session %}
 # python get-pip.py
-```
-2. Install Tentakel:
-```shell
+{% endhighlight %}
+
+2) Install Tentakel:
+{% highlight shell_session %}
 # pip install tentakel
-```
+{% endhighlight %}
 
 ## Configuring Tentakel
 Create a Tentakel configuration file `/etc/tentakel.conf`:
-```conf
+{% highlight conf %}
 group default ()
   @ceph
 
@@ -43,12 +44,12 @@ group osd ()
   +192.168.1.5
   +192.168.1.6
   +192.168.1.7
-```
+{% endhighlight %}
 
 ## Testing Tentakel
 Let's do some simple tests:
-```shell
-# tentakel hostname
+{% highlight plaintext %}
+[root@pulpo-admin ~]# tentakel hostname
 ### 192.168.1.2(stat: 0, dur(s): 0.13):
 pulpo-dtn.ucsc.edu
 ### 192.168.1.4(stat: 0, dur(s): 0.13):
@@ -62,11 +63,11 @@ pulpo-osd01.ucsc.edu
 ### 192.168.1.3(stat: 0, dur(s): 0.13):
 pulpo-mon01.ucsc.edu
 
-# tentakel -g osd uptime
+[root@pulpo-admin ~]# tentakel -g osd uptime
 ### 192.168.1.5(stat: 0, dur(s): 0.14):
  14:24:54 up 3 days, 22 min,  0 users,  load average: 0.09, 0.22, 0.19
 ### 192.168.1.5(stat: 0, dur(s): 0.13):
  14:24:54 up 3 days, 22 min,  0 users,  load average: 0.09, 0.22, 0.19
 ### 192.168.1.5(stat: 0, dur(s): 0.14):
  14:24:54 up 3 days, 22 min,  0 users,  load average: 0.09, 0.22, 0.19
- ```
+{% endhighlight %}

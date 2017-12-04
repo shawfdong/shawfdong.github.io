@@ -20,7 +20,7 @@ The SSH public key for `root` has been copied to every Pulpos node during the [a
 2) We've used a simple [Ansible playbook](http://docs.ansible.com/ansible/latest/playbooks.html) to bind all 1GbE and 40GbE interfaces on every node to the `trusted` zone of FirewallD;
 
 3) We'll run `mon` daemons on *pulpo-mon01*, *pulpo-mds01* & *pulpo-admin*; `osd` daemons on *pulpo-osd01*, *pulpo-osd02* & *pulpo-osd03*; and `mds` daemon on *pulpo-mds01*.  Let's [open the required ports](http://docs.ceph.com/docs/luminous/start/quick-start-preflight/#ensure-connectivity):
-```shell
+{% highlight shell_session %}
 # ansible -m command -a "firewall-cmd --zone=public --add-service=ceph-mon --permanent" mons
 
 # ansible -m command -a "firewall-cmd --zone=public --add-service=ceph --permanent" osds
@@ -28,7 +28,7 @@ The SSH public key for `root` has been copied to every Pulpos node during the [a
 # ssh pulpo-mds01.local "firewall-cmd --zone=public --add-service=ceph --permanent" osds"
 
 # ansible -m command -a "firewall-cmd --reload" all
-```
+{% endhighlight %}
 
 ## SELINUX
 SELINUX is doubly disabled, with both a kernel parameter `selinux=0` and the configuration file `/etc/selinux/config`.

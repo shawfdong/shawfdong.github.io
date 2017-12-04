@@ -13,7 +13,7 @@ As of this writing, the current stable [release of Ceph](http://docs.ceph.com/do
 
 ## Purging old Ceph installation
 In order to start with a clean plate, we ran the following Bash script (`start-over.sh`) on the admin node (**pulpo-admin**) to [purge old Ceph packages, and erase old Ceph data and configuration](http://docs.ceph.com/docs/master/start/quick-ceph-deploy/#starting-over):
-```shell
+{% highlight shell_session %}
 #!/bin/bash
 
 cd ~/Pulpos
@@ -31,14 +31,14 @@ ansible -m command -a "yum erase -y libcephfs2 python-cephfs librados2 python-ra
 ansible -m shell -a "rm -rf /etc/systemd/system/ceph*.target.wants" all
 yum erase -y ceph-deploy
 rm -f ceph*
-```
+{% endhighlight %}
 We then rebooted all the nodes.
 
 ## Installing Kraken packages
 We use a simple [Ansible playbook](http://docs.ansible.com/ansible/latest/playbooks.html) to install Ceph v11.2 (Kraken) packages on all nodes in Pulpos, performing the following tasks:
 
 1)  Add a [Yum repository for Kraken](http://docs.ceph.com/docs/master/install/get-packages/#rpm-packages) (`/etc/yum.repos.d/ceph.repo`) on all the nodes:
-```ini
+{% highlight conf %}
 [Ceph]
 name=Ceph packages for $basearch
 baseurl=https://download.ceph.com/rpm-kraken/el7/$basearch
@@ -65,7 +65,7 @@ gpgcheck=1
 type=rpm-md
 gpgkey=https://download.ceph.com/keys/release.asc
 priority=2
-```
+{% endhighlight %}
 
 2) Install Ceph RPM packages on all the nodes;
 
@@ -74,7 +74,7 @@ priority=2
 4) Install `ceph-deploy` on the admin node (**pulpo-admin**).
 
 Let's verify that Kraken is installed on all the nodes:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin ~]# ansible -m command -a "ceph --version" all
 pulpo-admin.local | SUCCESS | rc=0 >>
 ceph version 11.2.1 (e0354f9d3b1eea1d75a7dd487ba8098311be38a7)
@@ -96,66 +96,66 @@ ceph version 11.2.1 (e0354f9d3b1eea1d75a7dd487ba8098311be38a7)
 
 pulpo-osd03.local | SUCCESS | rc=0 >>
 ceph version 11.2.1 (e0354f9d3b1eea1d75a7dd487ba8098311be38a7)
-```
+{% endhighlight %}
 
 ## ceph-deploy
 We use [ceph-deploy](http://docs.ceph.com/docs/kraken/man/8/ceph-deploy/) to [deploy Kraken](http://docs.ceph.com/docs/kraken/start/quick-ceph-deploy/) on the Pulpos cluster. `ceph-deploy` is a easy and quick tool to set up and take down a Ceph cluster. It uses ssh to gain access to other Ceph nodes from the admin node (**pulpo-admin**), and then uses the underlying Python scripts to automate the manual process of Ceph installation on each node. One can also use a generic deployment system, such as Puppet, Chef or Ansible, to deploy Ceph. I am particularly interested in [ceph-ansible](http://docs.ceph.com/ceph-ansible/master/), the Ansible playbook for Ceph; and may try it in the near future.
 
 1) We use the directory `/root/Pulpos` on the admin node to maintain the configuration files and keys
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin ~]# cd ~/Pulpos/
-```
+{% endhighlight %}
 
 2) Create a cluster, with `pulpo-mon01` as the initial monitor node (We'll add 2 monitors shortly):
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph-deploy new pulpo-mon01
-```
+{% endhighlight %}
 which generates `ceph.conf` & `ceph.mon.keyring` in the directory.
 
 3) Append the following 2 lines to `ceph.conf`
-```ini
+{% highlight conf %}
 public_network = 128.114.86.0/24
 cluster_network = 192.168.40.0/24
-```
+{% endhighlight %}
 The `public_network` is 10 Gb/s and `cluster_network` 40 Gb/s (see [Pulpos Networks]({{ site.baseurl }}{% post_url 2017-6-21-pulpos-networks %}))
 
 4) Append the following 2 lines to `ceph.conf` (to allow deletion of pools):
-```ini
+{% highlight ini %}
 [mon]
 mon_allow_pool_delete = true
-```
+{% endhighlight %}
 
 5) Deploy the initial monitor(s) and gather the keys:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph-deploy mon create-initial
-```
+{% endhighlight %}
 which generated `ceph.client.admin.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.bootstrap-mds.keyring` & `ceph.bootstrap-rgw.keyringmon.keyring` in the directory.
 
 6) Copy the configuration file and admin key to all the nodes
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph-deploy admin pulpo-admin pulpo-dtn pulpo-mon01 pulpo-mds01 pulpo-osd01 pulpo-osd02 pulpo-osd03
-```
+{% endhighlight %}
 which copies `ceph.client.admin.keyring` & `ceph.conf` to the directory `/etc/ceph` on all the nodes.
 
 7) Add 2 more monitors, on **pulpo-mds01** & **pulpo-admin**, respectively:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph-deploy mon add pulpo-mds01
 [root@pulpo-admin Pulpos]# ceph-deploy mon add pulpo-admin
-```
+{% endhighlight %}
 It seems that we can only add one at a time.
 
 ## Adding OSDs
 1) [List the disks](http://docs.ceph.com/docs/kraken/rados/deployment/ceph-deploy-osd/#list-disks) on the OSD nodes:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ssh pulpo-osd01 ceph-disk list
-```
+{% endhighlight %}
 or
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ssh pulpo-osd01 lsblk
-```
+{% endhighlight %}
 
 2) We use the following Bash script (`zap-disks.sh`) to [zap the disks](http://docs.ceph.com/docs/kraken/rados/deployment/ceph-deploy-osd/#zap-disks) on the OSD nodes (**Caution**: device names *can* and *do* change!):
-```shell
+{% highlight plaintext %}
 #!/bin/bash
 
 for i in {1..3}
@@ -171,10 +171,10 @@ do
      ceph-deploy disk zap pulpo-osd0${i}:nvme${j}n1
   done
 done
-```
+{% endhighlight %}
 
 3) We then use the following Bash script (`create-osd.sh`) to [create OSDs](http://docs.ceph.com/docs/kraken/rados/deployment/ceph-deploy-osd/#prepare-osds) on the OSD nodes:
-```shell
+{% highlight plaintext %}
 #!/bin/bash
 
 ### HDDs
@@ -197,14 +197,15 @@ do
   ceph-deploy osd activate pulpo-osd0${i}:nvme1n1p1
   sleep 10
 done
-```
+{% endhighlight %}
+
 The goals were to (on each of the OSD nodes):
 * Create an OSD on each of the 8TB SATA HDDs, using the default **filestore** backend;
 * Use a partition on the first NVMe SSD (`/dev/nvme1n0`) as the journal for each of the OSDs on the HDDs;
 * Create an OSD on the second NVMe SSD (`/dev/nvme1n1`), using the default **filestore** backend.
 
 Let's see if we have achieved our goals:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ssh pulpo-osd01 ceph-disk list
 /dev/nvme0n1 :
  /dev/nvme0n1p1 ceph journal, for /dev/sda1
@@ -246,14 +247,14 @@ Let's see if we have achieved our goals:
  /dev/sdk1 ceph data, active, cluster ceph, osd.10, journal /dev/nvme0n1p11
 /dev/sdl :
  /dev/sdl1 ceph data, active, cluster ceph, osd.11, journal /dev/nvme0n1p12
-```
+{% endhighlight %}
 It looks about right!
 
 <p class="note">Each journal partition is only 5GB in size. So there is plenty of space left on the first NVMe SSD (the total capacity is 1.1TB). We may create a new partition there to benchmark the NVMe SSD in the near future.</p>
 
 ## Changing pg_num
 Let's check the health of the Ceph cluster:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph -s
     cluster ba892c66-7666-4957-b096-92a92bb87282
      health HEALTH_WARN
@@ -266,28 +267,28 @@ Let's check the health of the Ceph cluster:
       pgmap v793: 64 pgs, 1 pools, 0 bytes data, 0 objects
             1423 MB used, 265 TB / 265 TB avail
                   64 active+clean
-```
+{% endhighlight %}
 
 At this point, only one default pool, `rbd`, exists. But the default `pg_num` is too small!
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd lspools
 0 rbd,
 [root@pulpo-admin Pulpos]# ceph osd pool get rbd pg_num
 pg_num: 64
 [root@pulpo-admin Pulpos]# ceph osd pool get rbd pgp_num
 pgp_num: 64
-```
+{% endhighlight %}
 
 The [recommended pg_num](http://docs.ceph.com/docs/kraken/rados/operations/placement-groups/) for a Ceph cluster of Pulpos' size is 1024. Let's change both `pg_num` and `pgp_num`:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool set rbd pg_num 1024
 set pool 0 pg_num to 1024
 [root@pulpo-admin Pulpos]# ceph osd pool set rbd pgp_num 1024
 set pool 0 pgp_num to 1024
-```
+{% endhighlight %}
 
 Wait for a couple of minutes; then check the health again:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph -s
     cluster ba892c66-7666-4957-b096-92a92bb87282
      health HEALTH_OK
@@ -299,12 +300,12 @@ Wait for a couple of minutes; then check the health again:
       pgmap v861: 1024 pgs, 1 pools, 0 bytes data, 0 objects
             1471 MB used, 265 TB / 265 TB avail
                 1024 active+clean
-```
+{% endhighlight %}
 Healthy now!
 
 ## Modifying CRUSH map
-Unlike [Luminous]({{ site.baseurl }}{% post_url 2017-8-30-luminous-on-pulpos %}), Kraken has no concept of `crsuh device class`, so it doesn't differentiate between OSDs backed by HDDs and an OSD backed by NVMes.
-```shell
+Unlike [Luminous]({{ site.baseurl }}{% post_url 2017-8-30-luminous-on-pulpos %}), Kraken has no concept of `CRUSH device class`, so it doesn't differentiate between OSDs backed by HDDs and an OSD backed by NVMes.
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd tree
 ID WEIGHT    TYPE NAME            UP/DOWN REWEIGHT PRIMARY-AFFINITY
 -1 265.17267 root default
@@ -350,22 +351,22 @@ ID WEIGHT    TYPE NAME            UP/DOWN REWEIGHT PRIMARY-AFFINITY
 34   7.27539         osd.34            up  1.00000          1.00000
 35   7.27539         osd.35            up  1.00000          1.00000
 38   1.08620         osd.38            up  1.00000          1.00000
-```
+{% endhighlight %}
 Thus, by default, the [CRUSH](http://docs.ceph.com/docs/kraken/rados/operations/crush-map/) algorithm will pseudo-randomly store data of a pool in OSDs across the cluster, including both OSDs backed by HDDs and OSDs backed by NVMes! Because of significant difference in speed between HDDs and NVMes, this will result in imbalance. A better way is to [place different pools on different OSDs](http://docs.ceph.com/docs/kraken/rados/operations/crush-map/#placing-different-pools-on-different-osds). In order to do that with kraken, one must manually [edit the CRUSH map](http://docs.ceph.com/docs/kraken/rados/operations/crush-map/#editing-a-crush-map).  
 
 1) Get the current CRUSH map in compiled form (`crushmap-0.bin`):
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd getcrushmap -o crushmap-0.bin
 got crush map from osdmap epoch 191
-```
+{% endhighlight %}
 
 2) Decompile the CRUSH map to a text file (`crushmap-0.txt`):
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# crushtool -d crushmap-0.bin -o crushmap-0.txt
-```
+{% endhighlight %}
 
 Here is the decompiled CRUSH map (`crushmap-0.txt`):
-```
+{% highlight conf %}
 # begin crush map
 tunable choose_local_tries 0
 tunable choose_local_fallback_tries 0
@@ -508,16 +509,16 @@ rule replicated_ruleset {
 }
 
 # end crush map
-```
+{% endhighlight %}
 
 We can see that at this point, only default CRUSH ruleset `0` exists. We can verify that the default pool `rbd` uses the default ruleset `0`:  
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool get rbd crush_ruleset
 crush_ruleset: 0
-```
+{% endhighlight %}
 
 3) Edit the CRUSH map. Here is the new CRUSH map in decompiled form (`crushmap-2.txt`):
-```
+{% highlight conf %}
 # begin crush map
 tunable choose_local_tries 0
 tunable choose_local_fallback_tries 0
@@ -687,7 +688,7 @@ rule replicated_ruleset {
 }
 
 # end crush map
-```
+{% endhighlight %}
 
 A quick summary of the modifications:
 1. We replace the old host bucket `pulpo-osd01` (which contained both HDD OSDs and NVMe OSD) with `pulpo-osd01-hdd` (which only contains HDD OSDs) and `pulpo-osd01-nvme` (which contains the single NVMe OSD in the node);
@@ -698,18 +699,18 @@ A quick summary of the modifications:
 6. We modify the default `replicated_ruleset` to take the root bucket `hdd` (so it'll only use OSDs backed by HDDs).
 
 4) Compile the new CRUSH map:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# crushtool -c crushmap-2.txt -o crushmap-2.bin
-```
+{% endhighlight %}
 
 5) Set the new CRUSH map for the cluster:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd setcrushmap -i crushmap-2.bin
 set crush map
-```
+{% endhighlight %}
 
 Let's verify the new CRUSH tree:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd tree
 ID WEIGHT    TYPE NAME                 UP/DOWN REWEIGHT PRIMARY-AFFINITY
 -8   3.25800 root nvme
@@ -759,9 +760,9 @@ ID WEIGHT    TYPE NAME                 UP/DOWN REWEIGHT PRIMARY-AFFINITY
 33   7.27499         osd.33                 up  1.00000          1.00000
 34   7.27499         osd.34                 up  1.00000          1.00000
 35   7.27499         osd.35                 up  1.00000          1.00000
-```
+{% endhighlight %}
 and verify the ruleset `replicated_ruleset`:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd crush rule dump replicated_ruleset
 {
     "rule_id": 0,
@@ -786,20 +787,21 @@ and verify the ruleset `replicated_ruleset`:
         }
     ]
 }
-```
+{% endhighlight %}
 They both look about right!
 
 6) Disable OSD CRUSH update on start:
 
 Add the following 2 lines to `ceph.conf`:
-```ini
+{% highlight ini %}
 [osd]
         osd_crush_update_on_start = false
-```
+{% endhighlight %}
+
 Send the updated `ceph.conf` to all hosts:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph-deploy --overwrite-conf config push pulpo-admin pulpo-dtn pulpo-mon01 pulpo-mds01 pulpo-osd01 pulpo-osd02 pulpo-osd03
-```
+{% endhighlight %}
 
 7) Further readings:
 * [Ceph: managing CRUSH with the CLI](https://www.sebastien-han.fr/blog/2014/01/13/ceph-managing-crush-with-the-cli/)
@@ -807,9 +809,9 @@ Send the updated `ceph.conf` to all hosts:
 
 ## Adding an MDS
 Add a Metadata server:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph-deploy mds create pulpo-mds01
-```
+{% endhighlight %}
 The goal is to create a [Ceph Filesystem (CephFS)](http://docs.ceph.com/docs/kraken/cephfs/), using 3 RADOS pools:
 1. an Erasure Code data pool on the OSDs backed by HDDs
 2. a replicated metadata pool on the OSDs backed by HDDs
@@ -818,7 +820,7 @@ The goal is to create a [Ceph Filesystem (CephFS)](http://docs.ceph.com/docs/kra
 
 ## Creating an Erasure Code data pool
 The default [erasure code](http://docs.ceph.com/docs/kraken/rados/operations/erasure-code/) profile sustains the loss of a single OSD.
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd erasure-code-profile ls
 default
 [root@pulpo-admin Pulpos]# ceph osd erasure-code-profile get default
@@ -826,10 +828,10 @@ k=2
 m=1
 plugin=jerasure
 technique=reed_sol_van
-```
+{% endhighlight %}
 
 Let's create a new erasure code profile `pulpo_ec`:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd erasure-code-profile set pulpo_ec k=2 m=1 ruleset-root=hdd plugin=jerasure technique=reed_sol_van
 
 [root@pulpo-admin Pulpos]# ceph osd erasure-code-profile ls
@@ -845,18 +847,18 @@ ruleset-failure-domain=host
 ruleset-root=hdd
 technique=reed_sol_van
 w=8
-```
+{% endhighlight %}
 The important parameter is `ruleset-root=hdd`, which set `hdd` as the root bucket for the CRUSH ruleset. So a pool created with this profile will only use the OSDs backed by HDDs.
 
 Create the *Erasure Code* data pool for CephFS, with the `pulpo_ec` profile:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool create cephfs_data 1024 1024 erasure pulpo_ec
 pool 'cephfs_data' created
-```
+{% endhighlight %}
 which also generates a new CRUSH ruleset with the same name `cephfs_data`.
 
 Let's check the ruleset for pool `cephfs_data`:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool get cephfs_data crush_ruleset
 crush_ruleset: 1
 
@@ -901,17 +903,17 @@ pool 1 'cephfs_data' erasure size 3 min_size 3 crush_ruleset 1 object_hash rjenk
         }
     ]
 }
-```
+{% endhighlight %}
 
 ## Creating a replicated metadata pool
 Create the *replicated* metadata pool for CephFS, using the default CRUSH ruleset `replicated_ruleset`:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool create cephfs_metadata 1024 1024 replicated
 pool 'cephfs_metadata' created
-```
+{% endhighlight %}
 
 Let’s verify the ruleset for pool `cephfs_metadata`:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool get cephfs_metadata crush_ruleset
 crush_ruleset: 0
 
@@ -943,20 +945,20 @@ pool 2 'cephfs_metadata' replicated size 3 min_size 2 crush_ruleset 0 object_has
         }
     ]
 }
-```
+{% endhighlight %}
 
 **NOTE** at this point, if we try to create a CephFS, we'll get an error!
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph fs new pulpos cephfs_metadata cephfs_data
 Error EINVAL: pool 'cephfs_data' (id '1') is an erasure-code pool
-```
+{% endhighlight %}
 So in Kraken, if the data pool is erasure-coded, it is required to add a 'cache tier' to the data pool for CephFS to work!
 
 ## Adding Cache Tiering to the data pool
 The goal is to create a replicated pool on the OSDs backed by the NVMes, as the [cache tier](http://docs.ceph.com/docs/kraken/rados/operations/cache-tiering/) of the Erasure Code data pool for the CephFS.
 
 1) Create a new CRUSH ruleset for the cache pool:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd crush rule create-simple replicated_nvme nvme host
 [root@pulpo-admin Pulpos]# ceph osd crush rule list
 [
@@ -989,34 +991,34 @@ The goal is to create a replicated pool on the OSDs backed by the NVMes, as the 
         }
     ]
 }
-```
+{% endhighlight %}
 
 2) Create the replicated cache pool:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool create cephfs_cache 128 128 replicated replicated_nvme
 pool 'cephfs_cache' created
-```
+{% endhighlight %}
 
 By default, the replication size is 3. But 2 is sufficient for the cache pool.
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd pool get cephfs_cache size
 size: 3
 [root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache size 2
 set pool 3 size to 2
-```
+{% endhighlight %}
 
 One can list all the [placement groups](http://docs.ceph.com/docs/master/rados/operations/placement-groups/) of the cache pool (pool 3):
-```shell
+{% highlight shell_session %}
 # ceph pg dump | grep '^3\.'
-```
+{% endhighlight %}
 and get the placement group map for a particular placement group:
-```shell
+{% highlight shell_session %}
 #  ceph pg map 3.5c
 osdmap e215 pg 3.5c (3.5c) -> up [38,37] acting [38,37]
-```
+{% endhighlight %}
 
 3) Create the cache tier:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd tier add cephfs_data cephfs_cache
 pool 'cephfs_cache' is now (or already was) a tier of 'cephfs_data'
 
@@ -1030,22 +1032,25 @@ set pool 3 hit_set_type to bloom
 set pool 3 hit_set_count to 12
 [root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache hit_set_period 14400
 set pool 3 hit_set_period to 14400
-```
+
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache target_max_bytes 1099511627776
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache target_max_objects 1000000
+{% endhighlight %}
 
 ## Creating CephFS
 Now we can create the Ceph Filesystem:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph fs new pulpos cephfs_metadata cephfs_data
 new fs with metadata pool 2 and data pool 1
-```
+{% endhighlight %}
 
 ## Mounting CephFS on clients
 There are 2 ways to [mount CephFS](http://docs.ceph.com/docs/master/cephfs/best-practices/) on a client: using either the kernel CephFS driver, or ceph-fuse. The fuse client is the easiest way to get up to date code, while the kernel client will often give better performance.
 
 On a client, e.g., *pulpo-dtn*, create the mount point:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# mkdir /mnt/pulpos
-```
+{% endhighlight %}
 
 ### Kernel CephFS driver
 The Ceph Storage Cluster runs with authentication turned on by default. We need a file containing the secret key (i.e., not the keyring itself).
@@ -1053,28 +1058,28 @@ The Ceph Storage Cluster runs with authentication turned on by default. We need 
 0) [Create the secret file](http://docs.ceph.com/docs/kraken/start/quick-cephfs/#create-a-secret-file), and save it as `/etc/ceph/admin.secret`.
 
 1) We can use the `mount` command to [mount CephFS with kernel driver](http://docs.ceph.com/docs/kraken/cephfs/kernel/)
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# mount -t ceph 128.114.86.4:6789:/ /mnt/pulpos -o name=admin,secretfile=/etc/ceph/admin.secret
-```
+{% endhighlight %}
 or more redundantly
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# mount -t ceph 128.114.86.4:6789,128.114.86.5:6789,128.114.86.2:6789:/ /mnt/pulpos -o name=admin,secretfile=/etc/ceph/admin.secret
-```
+{% endhighlight %}
 With this method, we need to specify the monitor host IP address(es) and port number(s).
 
 2) Or we can use the simple helper [mount.ceph](http://docs.ceph.com/docs/kraken/man/8/mount.ceph/), which resolve monitor hostname(s) into IP address(es):
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# mount.ceph pulpo-mon01:/ /mnt/pulpos -o name=admin,secretfile=/etc/ceph/admin.secret
-```
+{% endhighlight %}
 or more redundantly
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# mount.ceph pulpo-mon01,pulpo-mds01,pulpo-admin:/ /mnt/pulpos -o name=admin,secretfile=/etc/ceph/admin.secret
-```
+{% endhighlight %}
 
 3) To [mount CephFS automatically on startup](http://docs.ceph.com/docs/kraken/cephfs/fstab/#kernel-driver), we can add the following to `/etc/fstab`:
-```conf
+{% highlight conf %}
 128.114.86.4:6789,128.114.86.5:6789,128.114.86.2:6789:/  /mnt/pulpos  ceph  name=admin,secretfile=/etc/ceph/admin.secret,noatime,_netdev  0  2
-```
+{% endhighlight %}
 
 ### ceph-fuse
 Make sure the `ceph-fuse` package is installed. We've already installed the package on *pulpo-dtn*, using *Ansible*.
@@ -1083,35 +1088,35 @@ Make sure the `ceph-fuse` package is installed. We've already installed the pack
 
 Then we can use the `ceph-fuse` command to mount the CephFS as a FUSE ([Filesystem in Userspace](https://en.wikipedia.org/wiki/Filesystem_in_Userspace)):
 on pulpo-dtn:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# ceph-fuse -m 128.114.86.4:6789 /mnt/pulpos
 ceph-fuse[11424]: starting ceph client2017-09-04 11:35:32.792972 7f0949207f00 -1 init, newargv = 0x7f09537e8c60 newargc=11
 
 ceph-fuse[11424]: starting fuse
-```
+{% endhighlight %}
 or more redundantly:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# ceph-fuse -m pulpo-mon01:6789,pulpo-mds01:6789,pulpo-admin:6789 /mnt/pulpos
-```
+{% endhighlight %}
 
 There are 2 options to automate mounting ceph-fuse: `fstab` or `systemd`.
 
 1) We can add the following to `/etc/fstab` (see [http://docs.ceph.com/docs/kraken/cephfs/fstab/#fuse](http://docs.ceph.com/docs/kraken/cephfs/fstab/#fuse)):
-```conf
+{% highlight conf %}
 id=admin  /mnt/pulpos  fuse.ceph  defaults,_netdev  0  0
-```
+{% endhighlight %}
 
 2) `ceph-fuse@.service` and `ceph-fuse.target` systemd units are available. To mount CephFS as a FUSE on `/mnt/pulpos`, using *systemctl*:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# systemctl start ceph-fuse@/mnt/pulpos.service
-```
+{% endhighlight %}
 To create a persistent mount point:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# systemctl enable ceph-fuse.target
 Created symlink from /etc/systemd/system/remote-fs.target.wants/ceph-fuse.target to /usr/lib/systemd/system/ceph-fuse.target.
 Created symlink from /etc/systemd/system/ceph.target.wants/ceph-fuse.target to /usr/lib/systemd/system/ceph-fuse.target.
 
 [root@pulpo-dtn ~]# systemctl enable ceph-fuse@-mnt-pulpos
 Created symlink from /etc/systemd/system/ceph-fuse.target.wants/ceph-fuse@-mnt-pulpos.service to /usr/lib/systemd/system/ceph-fuse@.service.
-```
+{% endhighlight %}
 **NOTE** here the command must be `systemctl enable ceph-fuse@-mnt-pulpos`. If we run `systemctl enable ceph-fuse@/mnt/pulpos` instead, we'll get an error "Failed to execute operation: Unit name pulpos is not valid." However, when starting the service, we can run either `systemctl start ceph-fuse@/mnt/pulpos` or `systemctl start ceph-fuse@-mnt-pulpos`!
