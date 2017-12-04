@@ -14,29 +14,29 @@ IPMICFG is an *in-band* utility for configuring IPMI devices. It is a command li
 
 We can use *IPMICFG* (or the standard *ipmitool*) to mitigate the serious [Supermicro IPMI Vulnerability]({{ site.baseurl }}{% post_url 2017-9-7-supermicro-ipmi-vulnerability %}).
 1. To disable DHCP for the IPMI interface:
-```shell
+{% highlight shell_session %}
 ./IPMICFG-Linux.x86_64 -dhcp off
-```
+{% endhighlight %}
 2. To set the IPMI interface's IP address to *0.0.0.0*:
-```shell
+{% highlight shell_session %}
 ./IPMICFG-Linux.x86_64 -m 0.0.0.0
-```
+{% endhighlight %}
 
 We can also [change the option of the IPMI interface](https://siliconmechanics.zendesk.com/hc/en-us/articles/201123119-Changing-NIC-failover-mode), using *raw* codes.
 * The default is **failover**:
-```shell
+{% highlight shell_session %}
 ./IPMICFG-Linux.x86_64 -raw 0x30 0x70 0x0c 0
 02
-```
+{% endhighlight %}
 * Set it to **dedicated**:
-```shell
+{% highlight shell_session %}
 ./IPMICFG-Linux.x86_64 -raw 0x30 0x70 0x0c 1 0
-```
+{% endhighlight %}
 * Verify it:
-```shell
+{% highlight shell_session %}
 ./IPMICFG-Linux.x86_64 -raw 0x30 0x70 0x0c 0
 00
-```
+{% endhighlight %}
 
 ## SMCIPMITool
 SMCIPMITool is an **out-of-band** Supermicro utility that allows a user to interface with SuperBlade systems and IPMI devices via CLI (Command Line Interface). Two kinds of user modes are provided when you start the SMCIMPITool: **Command Line** Mode and **Shell** Mode.
@@ -53,13 +53,13 @@ SMCIPMITool Key Features:
 
 Tips:
 * To set boot device to be PXE in next boot:
-```shell
+{% highlight shell_session %}
 ipmi power bootoption 1
-```
+{% endhighlight %}
 * To reset the system and force PXE as the boot device in the next boot only:
-```shell
+{% highlight shell_session %}
 ipmi power reset PXE
-```
+{% endhighlight %}
 
 ## IPMIView
 IPMIView is a GUI-based software application that allows administrators to manage multiple target systems through BMC. IPMIView monitors and reports on the status of a SuperBlade system, including the blade server, power supply, gigabit switch, InfiniBand and CMM modules. IPMIView also supports remote KVM and Virtual Media.

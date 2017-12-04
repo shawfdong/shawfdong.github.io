@@ -8,20 +8,20 @@ We set up [module](http://modules.sourceforge.net/) on [Hydra]({{ site.baseurl }
 
 ## module
 The module utility is available from CentOS `base` repo. So one can simply install it with:
-```shell
+{% highlight shell_session %}
 # yum -y install environment-modules
-```
+{% endhighlight %}
 
 ## Python
 So far we've installed 2 Python distributions, not counting the stock Python 2.7.5 that comes with CentOS7, on Hydra: *Anaconda3 4.4.0 for Python 3.6* & *Anaconda2 4.4.0 for Python 2.7*.
 
 Create a directory `/etc/modulefiles/python` to hold modulefiles for Python distributions:
-```shell
+{% highlight shell_session %}
 # mkdir /etc/modulefiles/python
-```
+{% endhighlight %}
 
 Create a modulefile `/etc/modulefiles/python/anaconda3` for *Anaconda Python 3.6*:
-```tcl
+{% highlight plaintext %}
 #%Module1.0#####################################################################
 ##
 ## anaconda3 modulefile
@@ -34,10 +34,10 @@ module-whatis   "adds Anaconda Python 3 to your PATH environment variable"
 
 prepend-path    PATH    /opt/anaconda3/bin
 conflict        python
-```
+{% endhighlight %}
 
 Create a modulefile `/etc/modulefiles/python/anaconda2` for *Anaconda Python 2.7*:
-```tcl
+{% highlight plaintext %}
 #%Module1.0#####################################################################
 ##
 ## anaconda3 modulefile
@@ -50,16 +50,16 @@ module-whatis   "adds Anaconda Python 2 to your PATH environment variable"
 
 prepend-path    PATH    /opt/anaconda2/bin
 conflict        python
-```
+{% endhighlight %}
 
 Create a file `/etc/modulefiles/python/.version` to make `python\anaconda3` the default *python* module:
-```tcl
+{% highlight plaintext %}
 #%Module
 set ModulesVersion "anaconda3"
-```
+{% endhighlight %}
 
 A few quick examples:
-```shell
+{% highlight shell_session %}
 # which python
 /usr/bin/python
 
@@ -74,18 +74,18 @@ python/anaconda2(12):ERROR:102: Tcl command execution failed: conflict  python
 # module swap python python/anaconda2
 # which python
 /opt/anaconda2/bin/python
-```
+{% endhighlight %}
 
 ## CUDA
 So far we've only installed *CUDA 8.0* on Hydra; but we'll install new versions when they become available.
 
 Create a directory `/etc/modulefiles/cuda` to hold modulefiles for CUDA:
-```shell
+{% highlight shell_session %}
 # mkdir /etc/modulefiles/cuda
-```
+{% endhighlight %}
 
 Create a modulefile `/etc/modulefiles/cuda/8.0` for *CUDA 8.0*:
-```tcl
+{% highlight plaintext %}
 #%Module1.0#####################################################################
 ##
 ## cuda 8.0 modulefile
@@ -108,17 +108,17 @@ append-path     PATH    $root/bin
 append-path     MANPATH $root/doc/man
 
 conflict cuda
-```
+{% endhighlight %}
 
 Create a file `/etc/modulefiles/cuda/.version` to make `cuda\8.0` the default *cuda* module:
-```tcl
+{% highlight plaintext %}
 #%Module
 set ModulesVersion "8.0"
-```
+{% endhighlight %}
 
 ## Loading modules into your default environment
 To automatically load the default `python` & `cuda` modules to your environment whenever you log in, append the following 2 lines to `~/.bashrc` (assuming your shell is *bash*):
-```shell
+{% highlight shell_session %}
 module load cuda
 module load python
-```
+{% endhighlight %}
