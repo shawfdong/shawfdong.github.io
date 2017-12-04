@@ -11,38 +11,41 @@ In this post I describe how we set up a home-brew environment for automated inst
 
 ## Apache HTTP server
 First we install the Apache HTTP server on [pulpo-admin]({{ site.baseurl }}{% post_url 2017-7-10-pulpo-admin %}).
-1. Install Apache HTTP server:
-```shell
+
+1) Install Apache HTTP server:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# yum -y install http httpd-devel httpd-tools
-```
-2. Enable and start httpd:
-```shell
+{% endhighlight %}
+
+2) Enable and start httpd:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# systemctl enable httpd
 [root@pulpo-admin ~]# systemctl start httpd
-  ```
+{% endhighlight %}
 
 ## CentOS 7 Local Mirror
 Next we create a [local CentOS 7 mirror](https://wiki.centos.org/HowTos/CreateLocalMirror) for network installs.
-```shell
+{% highlight plaintext %}
 [root@pulpo-admin ~]# yum -y install rsync
 
 [root@pulpo-admin ~]# mkdir -p /var/www/html/centos
 
 [root@pulpo-admin ~]# rsync -avSHP --delete --exclude "local*" \
---exclude "isos" linux.mirrors.es.net::centos/7.3.1611/ \
-/var/www/html/centos/7.3.1611/
+                      --exclude "isos" linux.mirrors.es.net::centos/7.3.1611/ \
+                      /var/www/html/centos/7.3.1611/
 
 [root@pulpo-admin ~]# cd /var/www/html/centos/
 [root@pulpo-admin centos]# ln -fs 7.3.1611 7
-```
+{% endhighlight %}
 
 ## DHCP server
-1. Install DHCP server:
-```shell
+1) Install DHCP server:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# yum -y install dhcp
-```
-2. Edit `/etc/dhcp/dhcpd.conf` to configure DHCP server for the control network 192.168.1.0/24 (see [Pulpos Networks]({{ site.baseurl }}{% post_url 2017-6-21-pulpos-networks %})):
-```conf
+{% endhighlight %}
+
+2) Edit `/etc/dhcp/dhcpd.conf` to configure DHCP server for the control network 192.168.1.0/24 (see [Pulpos Networks]({{ site.baseurl }}{% post_url 2017-6-21-pulpos-networks %})):
+{% highlight conf %}
 ddns-update-style none;
 subnet 192.168.1.0 netmask 255.255.255.0 {
         default-lease-time 1200;
@@ -79,21 +82,23 @@ subnet 192.168.1.0 netmask 255.255.255.0 {
                 }
         }
 }
-```
-3. Enable and start **dhcpd**:
-```shell
+{% endhighlight %}
+
+3) Enable and start **dhcpd**:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# systemctl enable dhcpd
 [root@pulpo-admin ~]# systemctl start dhcpd
-```
+{% endhighlight %}
 
 ## TFTP server
-1. Install TFTP server and [syslinux](http://www.syslinux.org/wiki/index.php?title=The_Syslinux_Project):
-```shell
+1) Install TFTP server and [syslinux](http://www.syslinux.org/wiki/index.php?title=The_Syslinux_Project):
+{% highlight shell_session %}
 [root@pulpo-admin ~]# yum clean all
 [root@pulpo-admin ~]# yum -y install xinetd tftp tftp-server syslinux
-```
-2. Configure TFTP server by editing `/etc/xinetd.d/tftp` (**Note** the standard TFTP directory is */var/lib/tftpboot*, but we'll use `/tftpboot` instead):
-```conf
+{% endhighlight %}
+
+2) Configure TFTP server by editing `/etc/xinetd.d/tftp` (**Note** the standard TFTP directory is */var/lib/tftpboot*, but we'll use `/tftpboot` instead):
+{% highlight conf %}
 service tftp
 {
         socket_type             = dgram
@@ -107,72 +112,80 @@ service tftp
         cps                     = 100 2
         flags                   = IPv4
 }
-```
-3. Copy [PXELINUX](http://www.syslinux.org/wiki/index.php?title=PXELINUX) files:
-```shell
+{% endhighlight %}
+
+3) Copy [PXELINUX](http://www.syslinux.org/wiki/index.php?title=PXELINUX) files:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# mkdir /tftpboot
 [root@pulpo-admin ~]# cp -v /usr/share/syslinux/pxelinux.0 /tftpboot/
 [root@pulpo-admin ~]# cp -v /usr/share/syslinux/menu.c32 /tftpboot/
 [root@pulpo-admin ~]# cp -v /usr/share/syslinux/memdisk /tftpboot
 [root@pulpo-admin ~]# cp -v /usr/share/syslinux/mboot.c32 /tftpboot
 [root@pulpo-admin ~]# cp -v /usr/share/syslinux/chain.c32 /tftpboot
-```
-4. Copy `initrd.img` and `vmlinuz` from the CentOS 7 local mirror:
-```shell
+{% endhighlight %}
+
+4) Copy `initrd.img` and `vmlinuz` from the CentOS 7 local mirror:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# cp -v /var/www/html/centos/7/os/x86_64/images/pxeboot/initrd.img /tftpboot/
 [root@pulpo-admin ~]# cp -v /var/www/html/centos/7/os/x86_64/images/pxeboot/vmlinuz /tftpboot/
-```
-5. Edit `/usr/lib/systemd/system/tftp.service` so that we'll use `/tftpboot` (instead of the default */var/lib/tftpboot*) as the TFTP directory:
-```shell
+{% endhighlight %}
+
+5) Edit `/usr/lib/systemd/system/tftp.service` so that we'll use `/tftpboot` (instead of the default */var/lib/tftpboot*) as the TFTP directory:
+{% highlight plaintext %}
 [root@pulpo-admin ~]# sed -i 's=/var/lib/tftpboot=/tftpboot=' \
-/usr/lib/systemd/system/tftp.service
-```
-6. Enable and start TFTP (**Note**: because we've made changes to the unit file for *tftp.service*, we need to reload systemd manager configuration with `systemctl daemon-reload`):
-```shell
+                      /usr/lib/systemd/system/tftp.service
+{% endhighlight %}
+
+6) Enable and start TFTP (**Note**: because we've made changes to the unit file for *tftp.service*, we need to reload systemd manager configuration with `systemctl daemon-reload`):
+{% highlight shell_session %}
 [root@pulpo-admin ~]# systemctl daemon-reload
 [root@pulpo-admin ~]# systemctl enable tftp
 [root@pulpo-admin ~]# systemctl start tftp
-```
-7. Test TFTP locally:
-```shell
+{% endhighlight %}
+
+7) Test TFTP locally:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# tftp
 (to) localhost
 tftp> get menu.c32
 tftp> quit
 [root@pulpo-admin ~]# ls -l menu.c32
 -rw-r--r-- 1 root root 55012 Jul 17 15:19 menu.c32
-```
+{% endhighlight %}
 So it works!
 
 ## PXELINUX
-1. Create the directory `/tftpboot/pxelinux.cfg` where PXELINUX configuration files reside:
-```shell
+1) Create the directory `/tftpboot/pxelinux.cfg` where PXELINUX configuration files reside:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# mkdir /tftpboot/pxelinux.cfg
-```
-2. Create a local boot configuration file (`/tftpboot/pxelinux.cfg/localboot`) with the following content:
-```conf
+{% endhighlight %}
+
+2) Create a local boot configuration file (`/tftpboot/pxelinux.cfg/localboot`) with the following content:
+{% highlight conf %}
 default centos7
 prompt 0
 label centos7
         localboot 0
-```
-3. Make localboot the *default* boot configuration:
-```shell
+{% endhighlight %}
+
+3) Make localboot the *default* boot configuration:
+{% highlight shell_session %}
 [root@pulpo-admin ~]# cd /tftpboot/pxelinux.cfg
 [root@pulpo-admin pxelinux.cfg]# ln -s localboot default
-```
-4. Create a PXELINUX configuration file for each IP address in the control subnet 192.168.1.0/24. For example, the private IP address of *pulpo-dtn* is `192.168.1.2`, its [PXELINUX](http://www.syslinux.org/wiki/index.php?title=PXELINUX) configuration filename is thus `C0A80102` (uppercase hexadecimal value of the IP address); and the content of `/tftpboot/pxelinux.cfg\C0A80102` is (see [RHEL7 Boot Options](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Installation_Guide/chap-anaconda-boot-options.html)):
-```conf
+{% endhighlight %}
+
+4) Create a PXELINUX configuration file for each IP address in the control subnet 192.168.1.0/24. For example, the private IP address of *pulpo-dtn* is `192.168.1.2`, its [PXELINUX](http://www.syslinux.org/wiki/index.php?title=PXELINUX) configuration filename is thus `C0A80102` (uppercase hexadecimal value of the IP address); and the content of `/tftpboot/pxelinux.cfg\C0A80102` is (see [RHEL7 Boot Options](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Installation_Guide/chap-anaconda-boot-options.html)):
+{% highlight conf %}
 default centos7
 prompt 0
 label centos7
         kernel vmlinuz
         append initrd=initrd.img inst.ks=http://192.168.1.1/centos/ks/dtn.cfg devfs=nomount selinux=0
-```
+{% endhighlight %}
 
 ## Kickstart Installation
 Lastly we create a [kickstart configuration file](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Installation_Guide/sect-kickstart-syntax.html) for each node. These configuration files are served by Apache HTTP server. For example, the kickstart configuration file for *pulpo-dtn* is `/var/www/html/centos/ks/dtn.cfg`, with the following content:
-```conf
+{% highlight conf %}
 #version=CentOS7
 # System authorization information
 auth --enableshadow --passalgo=sha512
@@ -234,12 +247,12 @@ chmod 600 /root/.ssh/authorized_keys
 %addon com_redhat_kdump --disable --reserve-mb='auto'
 
 %end
-```
+{% endhighlight %}
 
 **NOTES**
 
 1) *pulpo-dtn* has a single SSD. On dual-SSD nodes such as *pulpo-mon01* and *pulpo-mds01*, we create software RAID 1 partitions on the 2 SSDs:
-```conf
+{% highlight conf %}
 # System bootloader configuration
 bootloader --location=mbr --boot-drive=sda
 # Partition clearing information
@@ -255,10 +268,10 @@ part raid.956 --fstype="mdmember" --ondisk=sdb --grow --size=8192
 raid /boot --device=boot --fstype="xfs" --level=RAID1 --label=boot raid.500 raid.506
 raid swap --device=swap --fstype="swap" --level=RAID1 raid.1735 raid.1741
 raid / --device=root --fstype="xfs" --level=RAID1 --label=root raid.950 raid.956
-```
+{% endhighlight %}
 
 2) Each of the 3 OSD nodes has two 1TB SATA SSDs (which are the boot drives), twelve 8TB SATA HDDs, and two 1.2TB PCIe SSDs. Most of the time, the twelve 8TB SATA HDDs show up as `sda` - `sdl`, and the two 1TB SATA SSDs as `sdm` & `sdn`, respectively. However, device names do change from time to time! To avoid accidental installation of the OS onto some of the HDDs, one can either pull out all the HDD driver bays during network installation; or leave the *disk partitioning information* blank in the kickstart configuration file and manually configure the partitions during installation.
 
 I took the latter approach. I didn't physically go to the Data Center to configure the partitions; instead, I used Supermicro's GUI tool [IPMIView](https://www.supermicro.com/solutions/SMS_IPMI.cfm) to redirect KVM console to my laptop and did the configuration there.     
 
-3). Somehow, during the network installation, the Anaconda installer would send a BPDU packet to the top-of-the-rack Brocade switch, causing the ports to be err-disabled! Our network engineers had to disable *BPDU guard* on those ports!
+3) Somehow, during the network installation, the Anaconda installer would send a BPDU packet to the top-of-the-rack Brocade switch, causing the ports to be err-disabled! Our network engineers had to disable *BPDU guard* on those ports!

@@ -25,7 +25,7 @@ Jul 11 14:12:36 pulpo-admin.ucsc.edu systemd[1]: Started firewalld - dynamic fir
 
 ## firewall-cmd
 **firewall-cmd** is the command line client of the FirewallD. It provides interface to manage runtime and permanent configuration.
-{% highlight shell %}
+{% highlight shell_session %}
 [root@pulpo-admin ~]# firewall-cmd --state
 running
 {% endhighlight %}
@@ -94,40 +94,40 @@ trusted
 [Fail2ban](https://www.fail2ban.org/wiki/index.php/Main_Page) scans log files and bans IP addresses that makes too many password failures. It updates firewall rules to reject the IP address. Fail2Ban can read multiple log files such as sshd or Apache web server ones.
 
 Fail2ban packages are available from the EPEL repository. To install Fail2ban with support for manipulating firewalld rules (Ref: [Install Fail2ban on Centos 7 to Protect SSH via firewalld](https://devops.profitbricks.com/tutorials/install-fail2ban-on-centos-7-to-protect-ssh-via-firewalld/)):
-```shell
+{% highlight shell_session %}
 # yum install -y fail2ban-firewalld
-```
+{% endhighlight %}
 
 To configure Fail2ban, add a file `/etc/fail2ban/jail.local` with the following contents:
-```ini
+{% highlight conf %}
 [sshd]
 enabled = true
 maxretry = 3
 bantime = 86400
-```
+{% endhighlight %}
 
 Enable and start the `fail2ban` service:
-```shell
+{% highlight shell_session %}
 # systemctl enable fail2ban
 Created symlink from /etc/systemd/system/multi-user.target.wants/fail2ban.service to /usr/lib/systemd/system/fail2ban.service.
 # systemctl start fail2ban
-```
+{% endhighlight %}
 
 Verify that the *sshd* jail has indeed been enabled:
-```shell
+{% highlight shell_session %}
 # fail2ban-client status
 Status
 |- Number of jail:      1
 `- Jail list:   sshd
-```
+{% endhighlight %}
 
 Verify that Fail2ban has added a FirewallD rule to block IP addresses that are generating failed login attempts:
-```shell
+{% highlight shell_session %}
 # firewall-cmd --direct --get-all-rules
 ipv4 filter INPUT 0 -p tcp -m multiport --dports ssh -m set --match-set fail2ban-sshd src -j REJECT --reject-with icmp-port-unreachable
-```
+{% endhighlight %}
 An *ipset* list called `fail2ban-sshd` has been created. We can list the current contents of the list:
-```shell
+{% highlight shell_session %}
 # ipset list fail2ban-sshd
 Name: fail2ban-sshd
 Type: hash:ip
@@ -137,9 +137,9 @@ Size in memory: 16592
 References: 1
 Members:
 201.249.207.212 timeout 86393
-```
+{% endhighlight %}
 or
-```shell
+{% highlight shell_session %}
 # fail2ban-client status sshd
 Status for the jail: sshd
 |- Filter
@@ -150,7 +150,7 @@ Status for the jail: sshd
    |- Currently banned: 1
    |- Total banned:     1
    `- Banned IP list:   201.249.207.212
-```
+{% endhighlight %}
 
 ## References
 * [Introduction to FirewallD on CentOS](https://www.linode.com/docs/security/firewalls/introduction-to-firewalld-on-centos)
