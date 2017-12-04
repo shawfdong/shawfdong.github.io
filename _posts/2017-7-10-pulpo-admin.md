@@ -17,58 +17,58 @@ The admin node of our Ceph storage cluster [Pulpos]({{ site.baseurl }}{% post_ur
 1) Performe a minimal installation of CentOS 7 on *pulpo-admin*.
 
 2) Disable Selinux by changing the following line in `/etc/selinux/config`:
-```conf
+{% highlight conf %}
 SELINUX=enforcing
-```
+{% endhighlight %}
 to:
-```conf
+{% highlight conf %}
 SELINUX=disabled
-```
+{% endhighlight %}
 
 3) After copying SSH keys to the host, disable password authentication of SSH by changing the following line in `/etc/ssh/sshd_config`:
-```conf
+{% highlight conf %}
 PasswordAuthentication yes
-```
+{% endhighlight %}
 to
-```conf
+{% highlight conf %}
 PasswordAuthentication no
-```
+{% endhighlight %}
 
 4) Disable GSSAPI authentication of SSH by changing the following line in `/etc/ssh/sshd_config`:
-```conf
+{% highlight conf %}
 GSSAPIAuthentication yes
-```
+{% endhighlight %}
 to:
-```conf
+{% highlight conf %}
 GSSAPIAuthentication no
-```
+{% endhighlight %}
 
 5) Update all packages:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin ~]# yum -y update
-```
+{% endhighlight %}
 
 6) Install the package `net-tools`, which contains basic networking tools, including *ifconfig*, *netstat*, *route*, and others:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin ~]# yum install -y net-tools
-```
+{% endhighlight %}
 
 7) Install the package `bind-utils`, which contains a collection of utilities for querying DNS servers, including *dig*, *nslookup*, and others:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin ~]# yum install -y bind-utils
-```
+{% endhighlight %}
 
 8) Reboot.
 
 9) Remove the old kernel:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin ~]# yum erase -y kernel-3.10.0-514.el7.x86_64
-```
+{% endhighlight %}
 
 10) Create a pair of SSH keys of type `ed25519` for *root*:
-```shell
+{% highlight shell_session %}
 [root@pulpo-admin ~]# cd ~/.ssh
 [root@pulpo-admin .ssh]# ssh-keygen -t ed25519
-```
+{% endhighlight %}
 
 <p class="note"><em>hyper-threading</em> is enabled on pulpo-admin, as well as on all the other nodes in the Pulpos cluster.</p>

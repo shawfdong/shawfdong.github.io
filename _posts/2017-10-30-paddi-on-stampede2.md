@@ -9,7 +9,7 @@ In this post, we describe how to compile and run [Dr. Stephan Stellmach](http://
 I copied the tarball for PADDI `PADDI_10.1_dist.tgz` from Hyades to Stampede2. The tarball contains generic x86-64 libraries and executable that have been compiled with Intel MPI and Intel Compilers. Since KNL processors offer binary compatibility with Intel Xeon processors, legacy x86-64 binaries can run on KNL nodes without recompilation. However, those binaries won't take advantage of KNL's unique features (such as AVX 512), and therefore won't run at optimal speed on KNL nodes. We'll recompile PADDI for the KNL microarchitecture.
 
 Unpack the tarball in the home directory on Stampede2:
-{% highlight shell %}
+{% highlight shell_session %}
 $ tar xvfz PADDI_10.1_dist.tgz
 {% endhighlight %}
 
@@ -35,7 +35,7 @@ According to the `README` file, PADDI depends upon the following libraries:
 TACC provides optimized builds for *FFTW3* & *Parallel NetCDF* on Stampede2 and we'll simply use them. We'll only need to recompile *jutils*.
 
 Note that TACC uses [LMOD](https://www.tacc.utexas.edu/research-development/tacc-projects/lmod) to manage software on Stampede2. LMOD is similar to the module utility deployed on Hyades and NERSC supercomputers. You can list currently loaded modules with:
-{% highlight shell %}
+{% highlight shell_session %}
 $ module list
 
 Currently Loaded Modules:
@@ -45,7 +45,7 @@ Currently Loaded Modules:
 
 ### FFTW3
 To see what FFTW packages are available:
-{% highlight shell %}
+{% highlight shell_session %}
 $ module avail fftw
 
 -------------------- /opt/apps/intel17/impi17_0/modulefiles --------------------
@@ -53,18 +53,18 @@ $ module avail fftw
 {% endhighlight %}
 
 **fftw3** is what we need. To learn more about it:
-{% highlight shell %}
+{% highlight shell_session %}
 $ module show fftw3
 {% endhighlight %}
 
 To load the *fftw3* module (note we only need to load the module when we compile PADDI, we *don't* need to load it when running PADDI):
-{% highlight shell %}
+{% highlight shell_session %}
 $ module load fftw3
 {% endhighlight %}
 
 ### Parallel netCDF (PnetCDF)
 To see what NetCDF packages are avaiable:
-{% highlight shell %}
+{% highlight shell_session %}
 $ module avail netcdf
 
 -------------------- /opt/apps/intel17/impi17_0/modulefiles --------------------
@@ -80,28 +80,28 @@ The choices can be confusing, so a brief explanation is in order:
 3. **netcdf** is the serial version of NetCDF4
 
 To learn more about the *pnetcdf* module:
-{% highlight shell %}
+{% highlight shell_session %}
 $ module show pnetcdf
 {% endhighlight %}
 
 To load the *pnetcdf* module (note we only need to load the module when we compile PADDI, we *don't* need to load it when running PADDI):
-{% highlight shell %}
+{% highlight shell_session %}
 $ module load pnetcdf
 {% endhighlight %}
 
 ### jutils
 We'll recompile *jutils*. Go the source directory:
-{% highlight shell %}
+{% highlight shell_session %}
 $ cd stuff_needed/lib_src/jutils
 {% endhighlight %}
 
 Clean up the old build:
-{% highlight shell %}
+{% highlight shell_session %}
 $ make clean
 {% endhighlight %}
 
-Modify `Makefile` so that it will have the following contents (note that we simply add the `-xCORE-AVX2 -axMIC-AVX512` compiler flags):
-{% highlight make %}
+Modify `Makefile` so that it will have the following contents (note that all we do is to simply add the `-xCORE-AVX2 -axMIC-AVX512` compiler flags):
+{% highlight plaintext %}
 FC            = ifort
 CFLAGS        = -O2 -xCORE-AVX2 -axMIC-AVX512 -Ijpeg12 -D_GNU_SOURCE  -DUSE12B -I.
 FFLAGS        = -xCORE-AVX2 -axMIC-AVX512
@@ -253,48 +253,37 @@ $(DEST)/$(PROGRAM): $(SRCS) $(LIBS) $(HDRS) $(EXTHDRS)
 {% endhighlight %}
 
 Copy the newly built libraries:
-{% highlight shell %}
+{% highlight shell_session %}
 $ cp libjc.a ../../lib/
 $ cp jpeg12/libjpeg.a ../../lib/
 {% endhighlight %}
 
 ## Compiling PADDI
 Go to source directory for PADDI:
-{% highlight shell %}
+{% highlight shell_session %}
 $ cd ../../../main/src
 {% endhighlight %}
 
 Clean up the old build:
-{% highlight shell %}
+{% highlight shell_session %}
 $ make totalclean
 {% endhighlight %}
 
-Modify `Makefile` so that the first few lines will look as follows (the rest being the same as original):
+Modify `Makefile` so that the first few lines will look as follows (the rest being the same as the original):
 {% highlight make %}
-DEFS          = -DDOUBLE_PRECISION -DMPI_MODULE -DAB_BDF3 -DTEMPERATURE_FIELD -DCHEMICA
-L_FIELD
-
+DEFS          = -DDOUBLE_PRECISION -DMPI_MODULE -DAB_BDF3 -DTEMPERATURE_FIELD -DCHEMICAL_FIELD
 FC            = mpiifort
-
 F90           = $(FC)
-
 FFLAGS        = $(DEFS) -xCORE-AVX2 -axMIC-AVX512
-
-F90FLAGS      = -I../../stuff_needed/include -I${TACC_PNETCDF_INC} -I${TACC_FFTW3_INC}
--cpp $(DEFS)
-
+F90FLAGS      = -I../../stuff_needed/include -I${TACC_PNETCDF_INC} -I${TACC_FFTW3_INC} -cpp $(DEFS)
 LD            = $(FC)
-
 LDFLAGS       =
-
 LIBS          =
-
-ADDLIBS       = -Wl,-rpath,${TACC_FFTW3_LIB} -L${TACC_FFTW3_LIB} -lfftw3f_mpi -lfftw3 -
-L${TACC_PNETCDF_LIB} -lpnetcdf -L../../stuff_needed/lib -ljc -ljpeg -lirc
+ADDLIBS       = -Wl,-rpath,${TACC_FFTW3_LIB} -L${TACC_FFTW3_LIB} -lfftw3f_mpi -lfftw3 -L${TACC_PNETCDF_LIB} -lpnetcdf -L../../stuff_needed/lib -ljc -ljpeg -lirc
 {% endhighlight %}
 
 Recompile PADDI
-{% highlight shell %}
+{% highlight shell_session %}
 $ make
 {% endhighlight %}
 It succeeded without a hitch!
@@ -302,8 +291,8 @@ It succeeded without a hitch!
 ## Running PADDI
 Copy the executable (in this case, `double_diff_double_3D`) and other requisite files to your $SCRATCH directory.
 
-PADDI is a pure MPI code. So we can write a SLURM job script based upon [the sample MPI job script in the user guide](https://portal.tacc.utexas.edu/user-guides/stampede2#submitting-batch-jobs-with-sbatch):
-{% highlight shell %}
+PADDI is a pure MPI code. So we can write a SLURM job script based upon [the sample MPI job script in the Stampede2 User Guide](https://portal.tacc.utexas.edu/user-guides/stampede2#submitting-batch-jobs-with-sbatch):
+{% highlight plaintext %}
 #!/bin/bash
 #SBATCH -J DDtest           # Job name
 #SBATCH -o DDtest.o%j       # Name of stdout output file
