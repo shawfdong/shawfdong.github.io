@@ -11,30 +11,30 @@ In this post, we document how we installed [Globus Connect Server](https://www.g
 
 ## Configuring Firewall
 1) Open inbound TCP port `2811` from `184.73.189.163` and `174.129.226.69`, which is used for GridFTP control channel traffic:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="184.73.189.163" port protocol="tcp" port="2811" accept'
 success
 
 [root@pulpo-dtn ~]# firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="174.129.226.69" port protocol="tcp" port="2811" accept'
 success
-```
+{% endhighlight %}
 
 2) Open inbound TCP ports `50000 - 51000` from any, which are used for GridFTP data channel traffic:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# firewall-cmd --permanent --zone=public --add-port=50000-51000/tcp
 success
-```
+{% endhighlight %}
 
 <p class="note">We don't need to open ports for outbound traffics, because they are allowed by default. And we won't run <em>MyProxy</em> service, nor <em>OAuth</em> service, on pulpo-dtn.</p>
 
 3) Reload firewall rules:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# firewall-cmd --reload
 success
-```
+{% endhighlight %}
 
 4) Verify firewall rules:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# firewall-cmd --list-rich-rules
 rule family="ipv4" source address="174.129.226.69" port port="2811" protocol="tcp" accept
 rule family="ipv4" source address="184.73.189.163" port port="2811" protocol="tcp" accept
@@ -58,33 +58,33 @@ public (active)
   rich rules:
         rule family="ipv4" source address="174.129.226.69" port port="2811" protocol="tcp" accept
         rule family="ipv4" source address="184.73.189.163" port port="2811" protocol="tcp" accept
-```
+{% endhighlight %}
 
 ## Installing Globus Connect Server
 0) EPEL repository and *yum-plugin-priorities* have already been installed.
 
 1) Install the Globus Connect Server repository:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# yum -y install https://downloads.globus.org/toolkit/globus-connect-server/globus-connect-server-repo-latest.noarch.rpm
-```
+{% endhighlight %}
 which adds 3 repos to `/etc/yum.repos.d/`:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# ls -l /etc/yum.repos.d/globus-toolkit-6-*
 -rw-r--r-- 1 root root 466 Sep 12 14:27 /etc/yum.repos.d/globus-toolkit-6-stable-el7.repo
 -rw-r--r-- 1 root root 507 Sep 12 14:27 /etc/yum.repos.d/globus-toolkit-6-testing-el7.repo
 -rw-r--r-- 1 root root 513 Sep 12 14:27 /etc/yum.repos.d/globus-toolkit-6-unstable-el7.repo
-```
+{% endhighlight %}
 
 2) Install Globus Connect Server
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# yum -y install globus-connect-server
-```
+{% endhighlight %}
 
 ## Creating a Globus Endpoint
 We'll create a Globus Endpoint `ucsc#pulpo-dtn` for *pulpo-dtn*, using authentication method [CILogon](https://docs.globus.org/authorization-authentication-guide/#transfer_to_from_an_endpoint_using_cilogon). For our purpose, it is sufficient to run only the *GridFTP* service on *pulpo-dtn*. we won't run *MyProxy* service, nor *OAuth* service, on *pulpo-dtn*.
 
 1) Modify `/etc/globus-connect-server.conf`:
-```ini
+{% highlight conf %}
 [Globus]
 User = ucsc
 Password = %(GLOBUS_PASSWORD)s
@@ -107,10 +107,10 @@ RestrictPaths = RW~,N~/.*
 [MyProxy]
 
 [OAuth]
-```
+{% endhighlight %}
 
 2) Run:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# globus-connect-server-setup
 Password:
 Using MyProxy server on None
@@ -118,10 +118,10 @@ Configured GridFTP server to run on pulpo-dtn.ucsc.edu
 Server DN: /C=US/O=Globus Consortium/OU=Globus Connect Service/CN=168b435e-9e58-11e7-acf8-22000a92523b
 Using Authentication Method CILogon
 Configured Endpoint pulpo-dtn
-```
+{% endhighlight %}
 
 The above command has started the GridFTP service:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# systemctl status -l globus-gridftp-server.service
 ● globus-gridftp-server.service - LSB: Globus GridFTP Server
    Loaded: loaded (/etc/rc.d/init.d/globus-gridftp-server; bad; vendor preset: disabled)
@@ -129,10 +129,10 @@ The above command has started the GridFTP service:
      Docs: man:systemd-sysv-generator(8)
    CGroup: /system.slice/globus-gridftp-server.service
            └─14869 /usr/sbin/globus-gridftp-server -c /etc/gridftp.conf -C /etc/gridftp.d -pidfile /var/run/globus-gridftp-server.pid -no-detach -config-base-path /
-```
+{% endhighlight %}
 
 Interestingly, as of this writing, Globus still uses the old SysV init scripts (see `/etc/rc.d/init.d/`), rather than Systemd unit files!
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# chkconfig --list
 
 Note: This output shows SysV services only and does not include native
@@ -148,11 +148,11 @@ globus-gridftp-sshftp   0:off   1:off   2:off   3:off   4:off   5:off   6:off
 myproxy-server  0:off   1:off   2:off   3:off   4:off   5:off   6:off
 netconsole      0:off   1:off   2:off   3:off   4:off   5:off   6:off
 network         0:off   1:off   2:on    3:on    4:on    5:on    6:off
-```
+{% endhighlight %}
 We note in passing that *globus-gridftp-sshftp* (sshftp access to globus-gridftp-server) is disabled. We can easily enable it when we want to use *sshftp*.
 
 Also note that we use *relay.globusonline.org* to generate key (`hostkey.pem`) and certificate (`hostcert.pem`), in the directory `/var/lib/globus-connect-server/grid-security/`, for *pulpo-dtn*:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# openssl x509 -in /var/lib/globus-connect-server/grid-security/hostcert.pem -text -noout
 Certificate:
     Data:
@@ -165,9 +165,9 @@ Certificate:
             Not Before: Sep 19 23:04:43 2017 GMT
             Not After : Sep 15 23:04:43 2037 GMT
         Subject: C=US, O=Globus Consortium, OU=Globus Connect Service, CN=168b435e-9e58-11e7-acf8-22000a92523b
-```
+{% endhighlight %}
 Globus uses a self-signed CA certificate:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# openssl x509 -in /var/lib/globus-connect-server/grid-security/certificates/a059cd44.0 -text -noout
 Certificate:
     Data:
@@ -179,7 +179,7 @@ Certificate:
             Not Before: Feb 23 16:14:02 2016 GMT
             Not After : Feb 18 16:14:02 2036 GMT
         Subject: C=US, O=Globus Consortium, CN=Globus Connect CA 3
-```
+{% endhighlight %}
 
 3) We can visit  [https://www.globus.org/app/endpoints/1b557e2e-9d8e-11e7-ace2-22000a92523b/overview](https://www.globus.org/app/endpoints/1b557e2e-9d8e-11e7-ace2-22000a92523b/overview) to verify that the endpoint `ucsc#pulpo-dtn` has been successfully created!
 
@@ -188,7 +188,7 @@ Certificate:
 We'll map the X.509 distinguished names of CILogon certificates to local POSIX usernames in `/etc/grid-security/grid-mapfile`. My UCSC username is *shaw*. As an example, I'll describe how to set up the mapping for user *shaw*.
 
 1) Find out my `UID` from UCSC Blue directory service:
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# yum -y install openldap-clients
 
 [root@pulpo-dtn ~]# ldapsearch -x -H ldap://ldap-blue.ucsc.edu -LLL 'uid=shaw'
@@ -196,23 +196,25 @@ dn: uid=shaw,ou=people,dc=ucsc,dc=edu
 homeDirectory: /afs/cats.ucsc.edu/users/t/shaw
 gidNumber: 100000
 uidNumber: 16348
-```
+{% endhighlight %}
 
 2) Create a user *shaw* on *pulpo-dtn* with no shell access (*/sbin/nologin*):
-```shell
+{% highlight shell_session %}
 [root@pulpo-dtn ~]# groupadd -g 16348 shaw
 [root@pulpo-dtn ~]# useradd -u 16348 -g shaw -c "Shawfeng Dong" -m -d /mnt/pulpos/shaw -s /sbin/nologin shaw
-```
+{% endhighlight %}
 Note we use the same `UID` from the Blue directory service, which may not be strictly necessary; but we must use the same username. The home directory is on the Ceph Filesystem, which is mounted at `/mnt/pulpos/`.
 
 3) Find out my CILogon certificate subject at [https://cilogon.org/](https://cilogon.org/)
-```conf
+{% highlight conf %}
 /DC=org/DC=cilogon/C=US/O=University of California, Santa Cruz/CN=Shawfeng Dong A13576
-```
+{% endhighlight %}
 
 4) Map my CILogon certificate subject to user *shaw*, by appending the following line to `/etc/grid-security/grid-mapfile`:
-```conf
+{% highlight conf %}
 "/DC=org/DC=cilogon/C=US/O=University of California, Santa Cruz/CN=Shawfeng Dong A13576" shaw
-```
+{% endhighlight %}
 
 5) Lastly, we perform some tests by transferring files from [ESnet test DTN at LBL](https://fasterdata.es.net/performance-testing/DTNs/) (Globus endpoint `esnet#lbl-diskpt1`) to *pulpo-dtn* (Globus endpoint `ucsc#pulpo-dtn`), using [Globus Online](https://www.globus.org/app/transfer). It works!
+
+**Note** mapping is unnecessary!
