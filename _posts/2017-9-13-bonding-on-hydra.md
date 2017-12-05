@@ -9,13 +9,13 @@ In this post, we document how we aggregated two 1GbE network interfaces into a l
 0) The two 1GbE network interfaces are `eno1` & `eno2`. It is prudent to back up the old configurations: */etc/sysconfig/network-scripts/ifcfg-eno1* & */etc/sysconfig/network-scripts/ifcfg-eno2*.
 
 1) [RHEL 7 Networking Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bonding_using_the_command_line_interface) says the bonding module is not loaded by default in RHEL/CentOS 7 and one needs to load the module:
-```shell
+{% highlight shell_session %}
 # modprobe --first-time bonding
-```
+{% endhighlight %}
 but I find it unnecessary; because I didn't do it and everything worked fine.
 
 2) Create configuration file `/etc/sysconfig/network-scripts/ifcfg-bond0` for the Channel Bonding Interface `bond0`:
-```ini
+{% highlight conf %}
 DEVICE=bond0
 NAME=bond0
 TYPE=Bond
@@ -30,11 +30,11 @@ BOOTPROTO=none
 ONBOOT=yes
 IPV6INIT=yes
 IPV6_AUTOCONF=yes
-```
+{% endhighlight %}
 <p class="note">In this case we use mode 6 (<em>balance-alb</em>), which does not require any specific configuration of the switch.</p>
 
 3a) Edit configuration file `/etc/sysconfig/network-scripts/ifcfg-eno1` for SLAVE interface `eno1`:
-```ini
+{% highlight conf %}
 DEVICE=eno1
 NAME=bond0-eno1
 TYPE=Ethernet
@@ -42,10 +42,10 @@ BOOTPROTO=none
 ONBOOT=yes
 MASTER=bond0
 SLAVE=yes
-```
+{% endhighlight %}
 
 3b) Edit configuration file `/etc/sysconfig/network-scripts/ifcfg-eno2` for SLAVE interface `eno2`:
-```ini
+{% highlight conf %}
 DEVICE=eno2
 NAME=bond0-eno2
 TYPE=Ethernet
@@ -53,17 +53,17 @@ BOOTPROTO=none
 ONBOOT=yes
 MASTER=bond0
 SLAVE=yes
-```
+{% endhighlight %}
 
 4) Activate the Channel Bond:
-```shell
+{% highlight shell_session %}
 # ifdown eno1; ifdown eno2; nmcli con reload; ifup bond0; ifup eno1; ifup eno2
 Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/4)
-```
+{% endhighlight %}
 Note that we were operating in-band, via an SSH session over *eno1*; so we chained the commands together. And it worked! My SSH connection was not even dropped!
 
 5) View the status of the bond interface:
-```shell
+{% highlight shell_session %}
 [root@hydra ~]# ip link
 2: eno1: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master bond0 state UP mode DEFAULT qlen 1000
     link/ether ac:1f:6b:21:d1:5a brd ff:ff:ff:ff:ff:ff
@@ -83,10 +83,10 @@ Note that we were operating in-band, via an SSH session over *eno1*; so we chain
        valid_lft forever preferred_lft forever
     inet6 fe80::ae1f:6bff:fe21:d15a/64 scope link
        valid_lft forever preferred_lft forever
-```
+{% endhighlight %}
 
 **/proc/net/bonding/bond0**:
-```conf
+{% highlight conf %}
 Ethernet Channel Bonding Driver: v3.7.1 (April 27, 2011)
 
 Bonding Mode: adaptive load balancing
@@ -112,10 +112,10 @@ Duplex: full
 Link Failure Count: 1
 Permanent HW addr: ac:1f:6b:21:d1:5b
 Slave queue ID: 0
-```
+{% endhighlight %}
 
 **sysfs**:
-```shell
+{% highlight shell_session %}
 [root@hydra ~]# cat /sys/class/net/bond0/bonding/slaves
 eno1 eno2
-```
+{% endhighlight %}
