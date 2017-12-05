@@ -1,12 +1,19 @@
 ---
 layout: post
-title: Installing Ceph v12.2 (Luminous) on Pulpos
+title: Installing Ceph v12.2.1 (Luminous) on Pulpos
 tags: [Ceph, Storage, Provisioning]
 ---
 
-In this post, we describe how we installed Ceph v12.2.0 (codename **Luminous**) on the [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) cluster.<!-- more -->
+In this post, we describe how we cleanly installed Ceph v12.2.1 (codename **Luminous**) on the [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) cluster.<!-- more -->
 
-In a surprising move, Red Hat released Ceph 12.2.0 on August 29, 2017, way ahead of their original schedule &mdash; Luminous was originally planned for release in Spring 2018! Luminous is the current [Long Term Stable (LTS) release](http://docs.ceph.com/docs/master/releases/) of Ceph, replacing both previous stable release *Kraken* (Ceph v11.2) and previous LTS release Jewel (Ceph v10.2). Luminous has [introduced many major](http://docs.ceph.com/docs/master/release-notes/#v12-2-0-luminous) changes from Kraken and Jewel; upgrade from earlier release is non-trivial. So we'll perform a clean re-installation of Luminous on Pulpos.
+We installed Ceph v12.2.0 on Pulpos in late Auguest. We created a Ceph Filesystem (CephFS), using 3 RADOS pools:
+1. an Erasure Code data pool on the OSDs backed by HDDs
+2. a replicated metadata pool on the OSDs backed by HDDs
+3. a replicated pool on the OSDs backed by NVMes, as the cache tier of the Erasure Code data pool
+
+It worked remarkably well. However, the cache tier added a lot of complexity to the architecture, but didn't appear to add much to performance! When [Ceph v12.2.1 was release on September 28, 2017](http://ceph.com/releases/v12-2-1-luminous-released/), I decided to wipe the slate clean, and create from scratch a much simpler Ceph Filesystem, using just 2 RADOS pools:
+1. a replicated data pool on the OSDs backed by HDDs, using partitions on NVMes as the *WAL* and *DB* devices
+2. a replicated metadata pool on the OSDs backed by NVMes
 
 * Table of Contents
 {:toc}
@@ -35,7 +42,9 @@ rm -f ceph*
 We then rebooted all the nodes.
 
 ## Installing Luminous packages
-We use a simple [Ansible playbook](http://docs.ansible.com/ansible/latest/playbooks.html) to install Ceph v12.2 (Luminous) packages on all nodes in Pulpos, performing the following tasks:
+A new kernel and many updated packages have been released in the interim. We first used a simple Ansible playbook to upgrade all packages.
+
+Then we used a simple [Ansible playbook](http://docs.ansible.com/ansible/latest/playbooks.html) to install Ceph v12.2.1 (Luminous) packages on all nodes in Pulpos, performing the following tasks:
 
 1)  Add a [Yum repository for Luminous](http://docs.ceph.com/docs/master/install/get-packages/#rpm-packages) (`/etc/yum.repos.d/ceph.repo`) on all the nodes:
 {% highlight conf %}
@@ -76,26 +85,26 @@ priority=2
 Let's verify that Luminous is installed on all the nodes:
 {% highlight shell_session %}
 [root@pulpo-admin ~]# ansible -m command -a "ceph --version" all
-pulpo-admin.local | SUCCESS | rc=0 >>
-ceph version 12.2.0 (32ce2a3ae5239ee33d6150705cdb24d43bab910c) luminous (rc)
-
-pulpo-mon01.local | SUCCESS | rc=0 >>
-ceph version 12.2.0 (32ce2a3ae5239ee33d6150705cdb24d43bab910c) luminous (rc)
-
 pulpo-dtn.local | SUCCESS | rc=0 >>
-ceph version 12.2.0 (32ce2a3ae5239ee33d6150705cdb24d43bab910c) luminous (rc)
+ceph version 12.2.1 (3e7492b9ada8bdc9a5cd0feafd42fbca27f9c38e) luminous (stable)
+
+pulpo-admin.local | SUCCESS | rc=0 >>
+ceph version 12.2.1 (3e7492b9ada8bdc9a5cd0feafd42fbca27f9c38e) luminous (stable)
 
 pulpo-mds01.local | SUCCESS | rc=0 >>
-ceph version 12.2.0 (32ce2a3ae5239ee33d6150705cdb24d43bab910c) luminous (rc)
+ceph version 12.2.1 (3e7492b9ada8bdc9a5cd0feafd42fbca27f9c38e) luminous (stable)
+
+pulpo-mon01.local | SUCCESS | rc=0 >>
+ceph version 12.2.1 (3e7492b9ada8bdc9a5cd0feafd42fbca27f9c38e) luminous (stable)
 
 pulpo-osd01.local | SUCCESS | rc=0 >>
-ceph version 12.2.0 (32ce2a3ae5239ee33d6150705cdb24d43bab910c) luminous (rc)
+ceph version 12.2.1 (3e7492b9ada8bdc9a5cd0feafd42fbca27f9c38e) luminous (stable)
 
 pulpo-osd02.local | SUCCESS | rc=0 >>
-ceph version 12.2.0 (32ce2a3ae5239ee33d6150705cdb24d43bab910c) luminous (rc)
+ceph version 12.2.1 (3e7492b9ada8bdc9a5cd0feafd42fbca27f9c38e) luminous (stable)
 
 pulpo-osd03.local | SUCCESS | rc=0 >>
-ceph version 12.2.0 (32ce2a3ae5239ee33d6150705cdb24d43bab910c) luminous (rc)
+ceph version 12.2.1 (3e7492b9ada8bdc9a5cd0feafd42fbca27f9c38e) luminous (stable)
 {% endhighlight %}
 
 ## Ceph-Deploy
@@ -113,14 +122,14 @@ We use [ceph-deploy](http://docs.ceph.com/docs/luminous/man/8/ceph-deploy/) to [
 which generates `ceph.conf` & `ceph.mon.keyring` in the directory.
 
 3) Append the following 2 lines to `ceph.conf`
-{% highlight ini %}
+{% highlight conf %}
 public_network = 128.114.86.0/24
 cluster_network = 192.168.40.0/24
 {% endhighlight %}
 The `public_network` is 10 Gb/s and `cluster_network` 40 Gb/s (see [Pulpos Networks]({{ site.baseurl }}{% post_url 2017-6-21-pulpos-networks %}))
 
 4) Append the following 2 lines to `ceph.conf` (to allow deletion of pools):
-{% highlight ini %}
+{% highlight conf %}
 [mon]
 mon_allow_pool_delete = true
 {% endhighlight %}
@@ -161,7 +170,7 @@ or
 {% endhighlight %}
 
 2) We use the following Bash script (`zap-disks.sh`) to [zap the disks](http://docs.ceph.com/docs/luminous/rados/deployment/ceph-deploy-osd/#zap-disks) on the OSD nodes (**Caution**: device names *can* and *do* change!):
-{% highlight plaintext %}
+{% highlight shell_session %}
 #!/bin/bash
 
 for i in {1..3}
@@ -280,20 +289,20 @@ Let's verify we have achieved our goals:
 Let's chech the cluster status:
 {% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph -s
-  cluster:
-    id:     e18516bf-39cb-4670-9f13-88ccb7d19769
-    health: HEALTH_OK
+cluster:
+  id:     5f675e57-a4dc-4425-ab4e-2e46f605411d
+  health: HEALTH_OK
 
-  services:
-    mon: 3 daemons, quorum pulpo-admin,pulpo-mon01,pulpo-mds01
-    mgr: pulpo-mon01(active), standbys: pulpo-mds01, pulpo-admin
-    osd: 39 osds: 39 up, 39 in
+services:
+  mon: 3 daemons, quorum pulpo-admin,pulpo-mon01,pulpo-mds01
+  mgr: pulpo-mon01(active), standbys: pulpo-mds01, pulpo-admin
+  osd: 39 osds: 39 up, 39 in
 
-  data:
-    pools:   0 pools, 0 pgs
-    objects: 0 objects, 0 bytes
-    usage:   0 kB used, 0 kB / 0 kB avail
-    pgs:
+data:
+  pools:   0 pools, 0 pgs
+  objects: 0 objects, 0 bytes
+  usage:   0 kB used, 0 kB / 0 kB avail
+  pgs:
 {% endhighlight %}
 Further readings on *BlueStore*:
 * [BlueStore, A New Storage Backend for Ceph, One Year In](https://www.slideshare.net/sageweil1/bluestore-a-new-storage-backend-for-ceph-one-year-in)
@@ -362,106 +371,12 @@ Add a Metadata server:
 {% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph-deploy mds create pulpo-mds01
 {% endhighlight %}
-The goal is to create a [Ceph Filesystem (CephFS)](http://docs.ceph.com/docs/luminous/cephfs/), using 3 RADOS pools:
-1. an Erasure Code data pool on the OSDs backed by HDDs
-2. a replicated metadata pool on the OSDs backed by HDDs
-3. a replicated pool on the OSDs backed by NVMes, as the cache tier of the Erasure Code data pool
 
-## Creating an Erasure Code data pool
-The default [erasure code](http://docs.ceph.com/docs/luminous/rados/operations/erasure-code/) profile sustains the loss of a single OSD.
-{% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd erasure-code-profile ls
-default
-[root@pulpo-admin Pulpos]# ceph osd erasure-code-profile get default
-k=2
-m=1
-plugin=jerasure
-technique=reed_sol_van
-{% endhighlight %}
+As alluded to earlier, the goal is to create a [Ceph Filesystem (CephFS)](http://docs.ceph.com/docs/luminous/cephfs/), using 2 RADOS pools:
+1. a replicated data pool on the OSDs backed by HDDs
+2. a replicated metadata pool on the OSDs backed by NVMes
 
-Let's create a new erasure code profile `pulpo_ec`:
-{% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd erasure-code-profile set pulpo_ec k=2 m=1 crush-device-class=hdd plugin=jerasure technique=reed_sol_van
-
-[root@pulpo-admin Pulpos]# ceph osd erasure-code-profile ls
-default
-pulpo_ec
-
-[root@pulpo-admin Pulpos]# ceph osd erasure-code-profile get pulpo_ec
-crush-device-class=hdd
-crush-failure-domain=host
-crush-root=default
-jerasure-per-chunk-alignment=false
-k=2
-m=1
-plugin=jerasure
-technique=reed_sol_van
-w=8
-{% endhighlight %}
-The important parameter is `crush-device-class=hdd`, which set `hdd` as the device class for the profile. So a pool created with this profile will only use the OSDs backed by HDDs.
-
-Create the *Erasure Code* data pool for CephFS, with the `pulpo_ec` profile:
-{% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd pool create cephfs_data 1024 1024 erasure pulpo_ec
-pool 'cephfs_data' created
-{% endhighlight %}
-which also generates a new CRUSH rule with the same name `cephfs_data`. We note in passing a terminology change: what's called `CRUSH ruleset` in Kraken and earlier is now called `CRUSH rule`; and the parameter `crush_ruleset` in the old ceph command is now replaced with `crush_rule`!
-
-Let's check the CRUSH rule for pool `cephfs_data`:
-{% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_data crush_rule
-crush_rule: cephfs_data
-
-[root@pulpo-admin Pulpos]# ceph osd dump | grep "^pool" | grep "crush_rule 1"
-pool 1 'cephfs_data' erasure size 3 min_size 3 crush_rule 1 object_hash rjenkins pg_num 1024 pgp_num 1024 last_change 160 flags hashpspool stripe_width 8192
-
-[root@pulpo-admin Pulpos]# ceph osd crush rule ls
-replicated_rule
-cephfs_data
-
-[root@pulpo-admin Pulpos]# ceph osd crush rule dump cephfs_data
-{
-    "rule_id": 1,
-    "rule_name": "cephfs_data",
-    "ruleset": 1,
-    "type": 3,
-    "min_size": 3,
-    "max_size": 3,
-    "steps": [
-        {
-            "op": "set_chooseleaf_tries",
-            "num": 5
-        },
-        {
-            "op": "set_choose_tries",
-            "num": 100
-        },
-        {
-            "op": "take",
-            "item": -2,
-            "item_name": "default~hdd"
-        },
-        {
-            "op": "chooseleaf_indep",
-            "num": 0,
-            "type": "host"
-        },
-        {
-            "op": "emit"
-        }
-    ]
-}
-{% endhighlight %}
-
-By default, erasure coded pools only work with uses like RGW that perform full object writes and appends. A new feature introduced in Luminous allows [partial writes for an erasure coded pool](http://docs.ceph.com/docs/luminous/rados/operations/erasure-code/#erasure-coding-with-overwrites), which may be enabled with a per-pool setting. This lets RBD and CephFS store their data in an erasure coded pool! Let's enable *overwrites* for the pool `cephfs_data`:
-{% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_data allow_ec_overwrites true
-set pool 1 allow_ec_overwrites to true
-{% endhighlight %}
-
-## Creating a replicated metadata pool
-As stated earlier, the goal is to create a replicated metadata pool for CephFS on the OSDs backed by HDDs.
-
+## Creating a replicated data pool
 However, the default CRUSH rule for replicated pool, `replicated_rule`, will use all types of OSDs, no matter whether they are backed by HDDs, or by NVMes:
 {% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd crush rule dump replicated_rule
@@ -508,9 +423,9 @@ Check the rule:
 {% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd crush rule dump pulpo_hdd
 {
-    "rule_id": 2,
+    "rule_id": 1,
     "rule_name": "pulpo_hdd",
-    "ruleset": 2,
+    "ruleset": 1,
     "type": 1,
     "min_size": 1,
     "max_size": 10,
@@ -534,25 +449,60 @@ Check the rule:
 
 We can now create the metadata pool using the CRUSH rule `pulpo_hdd`:
 {% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd pool create cephfs_metadata 1024 1024 replicated pulpo_hdd
-pool 'cephfs_metadata' created
+[root@pulpo-admin Pulpos]# ceph osd pool create cephfs_data 1024 1024 replicated pulpo_hdd
+pool 'cephfs_data' created
+{% endhighlight %}
+Here we set [placement groups](http://docs.ceph.com/docs/luminous/rados/operations/placement-groups/) number to be 1024, which was a bit too low; as we got a warning from `ceph -s`:
+{% highlight shell_session %}
+[root@pulpo-admin Pulpos]# ceph -s
+  cluster:
+    id:     5f675e57-a4dc-4425-ab4e-2e46f605411d
+    health: HEALTH_WARN
+            Reduced data availability: 1152 pgs inactive
+            Degraded data redundancy: 1152 pgs unclean
+            too few PGs per OSD (29 < min 30)
+
+  services:
+    mon: 3 daemons, quorum pulpo-admin,pulpo-mon01,pulpo-mds01
+    mgr: pulpo-mon01(active), standbys: pulpo-mds01, pulpo-admin
+    mds: pulpos-1/1/1 up  {0=pulpo-mds01=up:active}
+    osd: 39 osds: 39 up, 39 in
+
+  data:
+    pools:   2 pools, 1152 pgs
+    objects: 0 objects, 0 bytes
+    usage:   0 kB used, 0 kB / 0 kB avail
+    pgs:     100.000% pgs unknown
+             1152 unknown
 {% endhighlight %}
 
-Let’s verify that pool `cephfs_metadata` indeed uses rule `pulpo_hdd`:
+Let's double the PG (Placement Groups) number:
 {% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_metadata crush_rule
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_data pg_num
+pg_num: 1024
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_data pgp_num
+pgp_num: 1024
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_data pg_num 2048
+set pool 1 pg_num to 2048
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_data pgp_num 2048
+set pool 1 pgp_num to 2048
+{% endhighlight %}
+
+Let’s verify that pool `cephfs_data` indeed uses rule `pulpo_hdd`:
+{% highlight shell_session %}
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_data crush_rule
 crush_rule: pulpo_hdd
 {% endhighlight %}
 
-We note in passing that because we have enabled overwrites for the Erasure Code data pool, we could create a CephFS at this point:
+By default, the replication size is 3. But 2 is sufficient for the cache pool.
 {% highlight shell_session %}
-# ceph fs new pulpos cephfs_metadata cephfs_data
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_data size
+size: 3
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_data size 2
+set pool 1 size to 2
 {% endhighlight %}
-which is a marked improvement over [Kraken]({{ site.baseurl }}{% post_url 2017-8-21-kraken-on-pulpos %}). We, however, will delay the creation of CephFS until we've added a *cache tier* to the data pool.
 
-## Adding Cache Tiering to the data pool
-The goal is to create a replicated pool on the OSDs backed by the NVMes, as the [cache tier](http://docs.ceph.com/docs/luminous/rados/operations/cache-tiering/) of the Erasure Code data pool for the CephFS.
-
+## Creating a replicated metadata pool
 1) Create a new replication rule, `pulpo_nvme`, that targets the `nvme` device class (*root* is `default` and *bucket* type `host`):
 {% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph osd crush rule create-replicated pulpo_nvme default host nvme
@@ -562,15 +512,14 @@ Check the rule:
 {% highlight shell_session %}
 [root@pulpo-admin ~]# ceph osd crush rule ls
 replicated_rule
-cephfs_data
 pulpo_hdd
 pulpo_nvme
 
 [root@pulpo-admin ~]# ceph osd crush rule dump pulpo_nvme
 {
-    "rule_id": 3,
+    "rule_id": 2,
     "rule_name": "pulpo_nvme",
-    "ruleset": 3,
+    "ruleset": 2,
     "type": 1,
     "min_size": 1,
     "max_size": 10,
@@ -592,63 +541,37 @@ pulpo_nvme
 }
 {% endhighlight %}
 
-2) Create the replicated cache pool:
+2) Create the replicated metadata pool:
 {% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd pool create cephfs_cache 128 128 replicated pulpo_nvme
-pool 'cephfs_cache' created
+[root@pulpo-admin Pulpos]# ceph osd pool create cephfs_metadata 128 128 replicated pulpo_nvme
+pool 'cephfs_metadata' created
 {% endhighlight %}
 
-By default, the replication size is 3. But 2 is sufficient for the cache pool.
+By default, the replication size is 3. But 2 is sufficient for the metadata pool.
 {% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_cache size
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_metadata size
 size: 3
-[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache size 2
-set pool 3 size to 2
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_metadata size 2
+set pool 2 size to 2
 {% endhighlight %}
 
-One can list all the [placement groups](http://docs.ceph.com/docs/master/rados/operations/placement-groups/) of the cache pool (pool 3):
+Let's double the PG number:
 {% highlight shell_session %}
-# ceph pg dump | grep '^3\.'
-{% endhighlight %}
-and get the placement group map for a particular placement group:
-{% highlight shell_session %}
-#  ceph pg map 3.5c
-osdmap e173 pg 3.5c (3.5c) -> up [36,38] acting [36,38]
-{% endhighlight %}
-
-3) Create the cache tier:
-{% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph osd tier add cephfs_data cephfs_cache
-pool 'cephfs_cache' is now (or already was) a tier of 'cephfs_data'
-
-[root@pulpo-admin Pulpos]# ceph osd tier cache-mode cephfs_cache writeback
-set cache-mode for pool 'cephfs_cache' to writeback
-[root@pulpo-admin Pulpos]# ceph osd tier set-overlay cephfs_data cephfs_cache
-overlay for 'cephfs_data' is now (or already was) 'cephfs_cache'
-[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache hit_set_type bloom
-set pool 3 hit_set_type to bloom
-[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache hit_set_count 12
-set pool 3 hit_set_count to 12
-[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache hit_set_period 14400
-set pool 3 hit_set_period to 14400
-
-[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache target_max_bytes 1099511627776
-[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_cache target_max_objects 1000000
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_metadata pg_num
+pg_num: 128
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_metadata pgp_num
+pgp_num: 128
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_metadata pg_num 256
+set pool 2 pg_num to 256
+[root@pulpo-admin Pulpos]# ceph osd pool set cephfs_metadata pgp_num 256
+set pool 2 pgp_num to 256
 {% endhighlight %}
 
-## Creating CephFS
-Now we are ready to create the Ceph Filesystem:
-{% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph fs new pulpos cephfs_metadata cephfs_data
-new fs with metadata pool 2 and data pool 1
-{% endhighlight %}
-
-## A serious bug!
-Unfortunately, there is a serious bug lurking in the current version of Luminous (v12.2.0)! If we check the status of the Ceph cluster, we are told that all *placement groups* are both inactive and unclean!
+Let's check the status of our Ceph cluster again:
 {% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph -s
   cluster:
-    id:     e18516bf-39cb-4670-9f13-88ccb7d19769
+    id:     5f675e57-a4dc-4425-ab4e-2e46f605411d
     health: HEALTH_WARN
             Reduced data availability: 2176 pgs inactive
             Degraded data redundancy: 2176 pgs unclean
@@ -660,50 +583,107 @@ Unfortunately, there is a serious bug lurking in the current version of Luminous
     osd: 39 osds: 39 up, 39 in
 
   data:
-    pools:   3 pools, 2176 pgs
+    pools:   2 pools, 2304 pgs
     objects: 0 objects, 0 bytes
     usage:   0 kB used, 0 kB / 0 kB avail
     pgs:     100.000% pgs unknown
-             2176 unknown
+             2304 unknown
+{% endhighlight %}
+
+One can list all the [placement groups](http://docs.ceph.com/docs/master/rados/operations/placement-groups/) of the metadata pool (pool 2):
+{% highlight shell_session %}
+[root@pulpo-admin Pulpos]# ceph pg dump | grep '^2\.'
+{% endhighlight %}
+and get the placement group map for a particular placement group:
+{% highlight shell_session %}
+[root@pulpo-admin Pulpos]# ceph pg map 2.1
+osdmap e169 pg 2.1 (2.1) -> up [36,38] acting [36,38]
+{% endhighlight %}
+
+Let’s verify that pool `cephfs_metadata` indeed uses rule `pulpo_nvme`:
+{% highlight shell_session %}
+[root@pulpo-admin Pulpos]# ceph osd pool get cephfs_metadata crush_rule
+crush_rule: pulpo_nvme
+{% endhighlight %}
+
+## Creating CephFS
+Now we are ready to create the Ceph Filesystem:
+{% highlight shell_session %}
+[root@pulpo-admin Pulpos]# ceph fs new pulpos cephfs_metadata cephfs_data
+new fs with metadata pool 2 and data pool 1
+{% endhighlight %}
+
+By the way, the default maximum file size is 1TiB:
+{% highlight shell_session %}
+[root@pulpo-admin ~]# ceph fs get pulpos | grep 1099511627776
+max_file_size   1099511627776
+{% endhighlight %}
+Let's raise it to 2TiB:
+{% highlight shell_session %}
+[root@pulpo-admin ~]# ceph fs set pulpos max_file_size 2199023255552
+[root@pulpo-admin ~]# ceph fs get pulpos | grep max_file_size
+max_file_size   2199023255552
+{% endhighlight %}
+
+## Limitations
+Unfortunately, there is a serious bug lurking in the current version of Luminous (v12.2.1)! If we check the status of the Ceph cluster, we are told that all *placement groups* are both inactive and unclean!
+{% highlight shell_session %}
+[root@pulpo-admin Pulpos]# ceph -s
+cluster:
+  id:     5f675e57-a4dc-4425-ab4e-2e46f605411d
+  health: HEALTH_WARN
+          Reduced data availability: 2176 pgs inactive
+          Degraded data redundancy: 2176 pgs unclean
+
+services:
+  mon: 3 daemons, quorum pulpo-admin,pulpo-mon01,pulpo-mds01
+  mgr: pulpo-mon01(active), standbys: pulpo-mds01, pulpo-admin
+  mds: pulpos-1/1/1 up  {0=pulpo-mds01=up:active}
+  osd: 39 osds: 39 up, 39 in
+
+data:
+  pools:   2 pools, 2304 pgs
+  objects: 0 objects, 0 bytes
+  usage:   0 kB used, 0 kB / 0 kB avail
+  pgs:     100.000% pgs unknown
+           2304 unknown
 {% endhighlight %}
 
 Same with `ceph health`:
 {% highlight shell_session %}
 [root@pulpo-admin Pulpos]# ceph health detail
-HEALTH_WARN Reduced data availability: 2176 pgs inactive; Degraded data redundancy: 2176 pgs unclean
-PG_AVAILABILITY Reduced data availability: 2176 pgs inactive
-    pg 1.31d is stuck inactive for 65861.646865, current state unknown, last acting []
-    pg 1.31e is stuck inactive for 65861.646865, current state unknown, last acting []
-    pg 1.31f is stuck inactive for 65861.646865, current state unknown, last acting []
+HEALTH_WARN Reduced data availability: 2304 pgs inactive; Degraded data redundancy: 2304 pgs unclean
+PG_AVAILABILITY Reduced data availability: 2304 pgs inactive
+    pg 1.7cd is stuck inactive for 223.224011, current state unknown, last acting []
+    pg 1.7ce is stuck inactive for 223.224011, current state unknown, last acting []
+    pg 1.7cf is stuck inactive for 223.224011, current state unknown, last acting []
 ...
-PG_DEGRADED Degraded data redundancy: 2176 pgs unclean
-    pg 1.31d is stuck unclean for 65861.646865, current state unknown, last acting []
-    pg 1.31e is stuck unclean for 65861.646865, current state unknown, last acting []
-    pg 1.31f is stuck unclean for 65861.646865, current state unknown, last acting []
+PG_DEGRADED Degraded data redundancy: 2304 pgs unclean
+    pg 1.7cd is stuck unclean for 223.224011, current state unknown, last acting []
+    pg 1.7ce is stuck unclean for 223.224011, current state unknown, last acting []
+    pg 1.7cf is stuck unclean for 223.224011, current state unknown, last acting []
 ...
 {% endhighlight %}
 
-However, if we query any *placement group* that is supposedly inactive and unclean, we find it to be actually both *active* and *clean*. Take, for example, pg 1.31d:
+However, if we query any *placement group* that is supposedly inactive and unclean, we find it to be actually both *active* and *clean*. Take, for example, pg 1.7cd:
 {% highlight shell_session %}
-[root@pulpo-admin Pulpos]# ceph pg 1.31d query
+[root@pulpo-admin Pulpos]# ceph pg 1.7cd query
 {
     "state": "active+clean",
     "snap_trimq": "[]",
-    "epoch": 180,
+    "epoch": 178,
     "up": [
-        17,
-        25,
-        6
+        5,
+        13
     ],
     "acting": [
-        17,
-        25,
-        6
+        5,
+        13
     ],
     ...
 }
 {% endhighlight %}
-We hope this bug will be fixed soon!
+
 
 ## Mounting CephFS on clients
 There are 2 ways to [mount CephFS](http://docs.ceph.com/docs/master/cephfs/best-practices/) on a client: using either the kernel CephFS driver, or ceph-fuse. The fuse client is the easiest way to get up to date code, while the kernel client will often give better performance.
@@ -742,7 +722,7 @@ or more redundantly
 128.114.86.4:6789,128.114.86.5:6789,128.114.86.2:6789:/  /mnt/pulpos  ceph  name=admin,secretfile=/etc/ceph/admin.secret,noatime,_netdev  0  2
 {% endhighlight %}
 
-And here is another bug in current version of Luminous (v12.2.0): when CephFS is mounted, the mount point doesn't show up in the output of `df`; and although we can list the mount point specifically with `df -h /mnt/pulpos`, the size of the filesystem is reported as 0!
+And here is another bug in current version of Luminous (v12.2.1): when CephFS is mounted, the mount point doesn't show up in the output of `df`; and although we can list the mount point specifically with `df -h /mnt/pulpos`, the size of the filesystem is reported as 0!
 {% highlight shell_session %}
 [root@pulpo-dtn ~]# df -h /mnt/pulpos
 Filesystem                                Size  Used Avail Use% Mounted on
@@ -790,9 +770,24 @@ Created symlink from /etc/systemd/system/ceph-fuse.target.wants/ceph-fuse@-mnt-p
 {% endhighlight %}
 **NOTE** here the command must be `systemctl enable ceph-fuse@-mnt-pulpos`. If we run `systemctl enable ceph-fuse@/mnt/pulpos` instead, we'll get an error "Failed to execute operation: Unit name pulpos is not valid." However, when starting the service, we can run either `systemctl start ceph-fuse@/mnt/pulpos` or `systemctl start ceph-fuse@-mnt-pulpos`!
 
-Lastly, we note the same bug in current version of Luminous (v12.2.0): when CephFS is mounted using *ceph-fuse*, the mount point doesn't show up in the output of `df`; and although we can list the mount point specifically with `df -h /mnt/pulpos`, the size of the filesystem is reported as 0!
+Lastly, we note the same bug in current version of Luminous (v12.2.1): when CephFS is mounted using *ceph-fuse*, the mount point doesn't show up in the output of `df`; and although we can list the mount point specifically with `df -h /mnt/pulpos`, the size of the filesystem is reported as 0!
 {% highlight shell_session %}
 [root@pulpo-dtn ~]# df -h /mnt/pulpos
 Filesystem      Size  Used Avail Use% Mounted on
 ceph-fuse          0     0     0    - /mnt/pulpos
+{% endhighlight %}
+
+After a few days, it will be OK!
+
+## Upgrading to v12.2.2
+[Ceph v12.2.2 (Luminous) was released on December 1, 2017](http://ceph.com/releases/v12-2-2-luminous-released/). The upgrade is a breeze:
+{% highlight shell_session %}
+[root@pulpo-admin ~]# yum clean all
+[root@pulpo-admin ~]# yum -y update
+
+[root@pulpo-admin ~]# tentakel "yum clean all"
+[root@pulpo-admin ~]# tentakel "yum -y update"
+
+[root@pulpo-admin ~]# reboot
+[root@pulpo-admin ~]# tentakel reboot
 {% endhighlight %}

@@ -12,7 +12,7 @@ As of this writing, the current stable [release of Ceph](http://docs.ceph.com/do
 {:toc}
 
 ## Purging old Ceph installation
-In order to start with a clean plate, we ran the following Bash script (`start-over.sh`) on the admin node (**pulpo-admin**) to [purge old Ceph packages, and erase old Ceph data and configuration](http://docs.ceph.com/docs/master/start/quick-ceph-deploy/#starting-over):
+In order to start with a clean slate, we ran the following Bash script (`start-over.sh`) on the admin node (**pulpo-admin**) to [purge old Ceph packages, and erase old Ceph data and configuration](http://docs.ceph.com/docs/master/start/quick-ceph-deploy/#starting-over):
 {% highlight shell_session %}
 #!/bin/bash
 
