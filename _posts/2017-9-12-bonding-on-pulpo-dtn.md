@@ -6,7 +6,7 @@ tags: [Linux, Network]
 
 In this post, we document how we aggregated two 10GbE network interfaces into a logical *bonded* interface, on on **pulpo-dtn**.<!-- more --> We'll use mode 4 (`802.3ad`) of [Linux Ethernet Bonding Driver](https://www.kernel.org/doc/Documentation/networking/bonding.txt), which requires a switch that supports IEEE 802.3ad dynamic [Link Aggregation](https://en.wikipedia.org/wiki/Link_aggregation). We've just configured the [Pica8 switch]({{ site.baseurl }}{% post_url 2017-9-14-pica8-switch %}) to support IEEE 802.3ad dynamic link aggregation.
 
-0) The two 10GbE network interfaces are `ens1f0` & `ens1f1`. It is prudent to back up the old configurations: */etc/sysconfig/network-scripts/ifcfg-ens1f0* & */etc/sysconfig/network-scripts/ifcfg-ens1f1*.
+0) The two *10GbE* network interfaces are `ens1f0` & `ens1f1`. It is prudent to back up the old configurations: */etc/sysconfig/network-scripts/ifcfg-ens1f0* & */etc/sysconfig/network-scripts/ifcfg-ens1f1*.
 
 1) [RHEL 7 Networking Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bonding_using_the_command_line_interface) says the bonding module is not loaded by default in RHEL/CentOS 7 and one needs to load the module:
 {% highlight shell_session %}
@@ -14,7 +14,7 @@ In this post, we document how we aggregated two 10GbE network interfaces into a 
 {% endhighlight %}
 but that [may not be necessary]({{ site.baseurl }}{% post_url 2017-9-13-bonding-on-hydra %}).
 
-2) Bring down the two 10GbE interfaces:
+2) Bring down the two *10GbE* interfaces:
 {% highlight shell_session %}
 # ifdown ens1f0
 # ifdown ens1f1
