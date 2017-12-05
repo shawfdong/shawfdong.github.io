@@ -16,7 +16,7 @@ QuantaMesh BMS T3048-LY2R is a 1U top top-of-rack switch, based on the Broadcom 
 * Out-of-band management port (RJ-45, 10/100/1000Base-T)
 
 The CPU is a dual-core 32-bit [PowerPC e500v2](https://en.wikipedia.org/wiki/PowerPC_e500) @ 1.2GHz, from Freescale Semiconductor:
-```shell
+{% highlight shell_session %}
 shaw@sw7175-100-pica8-1:~$ cat /proc/cpuinfo
 processor       : 0
 cpu             : e500v2
@@ -35,20 +35,20 @@ timebase        : 75000000
 platform        : P2020 RDB
 model           : fsl,P2020
 Memory          : 2048 MB
-```
+{% endhighlight %}
 As one can see from above, total memory is 2GB.
 
 ## PicOS
 As of this writing, the switch runs PicOS *2.9.1.2*, which seems to be based on Debian 7.0:
-```shell
+{% highlight shell_session %}
 shaw@sw7175-100-pica8-1:~$ cat /etc/debian_version
 7.0
-```
+{% endhighlight %}
 It uses an ancient Linux kernel *2.6.32.69*:
-```shell
+{% highlight shell_session %}
 shaw@sw7175-100-pica8-1:~$ uname -a
 Linux sw7175-100-pica8-1 2.6.32.69 #1 SMP Tue May 9 06:06:19 CST 2017 ppc GNU/Linux
-```
+{% endhighlight %}
 
 PicOS can run in 2 different modes of operation:
 * **Open vSwitch (OVS) mode**: In this mode, PicOS is dedicated and optimized for [OpenFlow](https://www.opennetworking.org/sdn-resources/openflow) applications
@@ -71,7 +71,7 @@ The Pica8 switch is heavily guarded. In order to gain remote access to the switc
 * noc-prod-sebastion-1.ucsc.edu (alias: *sebastion1.ucsc.edu*)
 * noc-prod-sebastion-2.ucsc.edu (alias: *sebastion2.ucsc.edu*)
 
-```shell
+{% highlight shell_session %}
 $ ssh -l shaw sebastion1.ucsc.edu
 Password:
 Duo two-factor login for shaw
@@ -85,30 +85,30 @@ Enter a passcode or select one of the following options:
 Passcode or option (1-3): 1
 setsockopt IPV6_TCLASS 16: Operation not permitted:
 Success. Logging you in...
-```
+{% endhighlight %}
 
 3) Finally, one can ssh to the Pica8 switch, whose FQDN is *sw7175-100-ve435.ucsc.edu* and whose IP address is *128.114.109.93*.
-```shell
+{% highlight shell_session %}
 [shaw@noc-prod-sebastion-1 ~]$ ssh -l shaw 128.114.109.93
-```
+{% endhighlight %}
 Curiously, although PicOS says the hostname of the switch is *sw7175-100-pica8-1*:
-```shell
+{% highlight shell_session %}
 shaw@sw7175-100-pica8-1:~$ hostname
 sw7175-100-pica8-1
-```
+{% endhighlight %}
 it is not the registered DNS name of the switch!
 
 4) One can then enter CLI, by typing `cli`:
-```shell
+{% highlight shell_session %}
 shaw@sw7175-100-pica8-1:~$ cli
 Synchronizing configuration...OK.
 Pica8 PicOS Version 2.9.1.2
 Welcome to PicOS on sw7175-100-pica8-1
-```
+{% endhighlight %}
 
 ## Link Aggregation
 My colleague George Peeks has configured [Link Aggregation Control Protocol (LACP)](https://en.wikipedia.org/wiki/Link_aggregation#Link_Aggregation_Control_Protocol) on the Pica8 switch, in order to support [bonding of two 10GbE interfaces on pulpo-dtn]({{ site.baseurl }}{% post_url 2017-9-12-bonding-on-pulpo-dtn %}).
-```shell
+{% highlight shell_session %}
 shaw@sw7175-100-pica8-1> show running-config
     interface {
         cut-through-mode: true
@@ -179,4 +179,4 @@ Minimum number of selected ports: 1
   ---------      ----------      ----------
   te-1/1/3       Up(active)      10Gb/s
   te-1/1/4       Up(active)      10Gb/s
-```
+{% endhighlight %}
