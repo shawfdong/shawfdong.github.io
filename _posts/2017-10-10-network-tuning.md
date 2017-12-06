@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Network Tuning for Pulpos
-tags: [Authentication]
+tags: [Linux, Network]
 ---
 
 In the post, we document the network tuning we've done for the nodes in the [Pulpos]({{ site.baseurl }}{% post_url 2017-2-9-pulpos %}) cluster.<!-- more -->
@@ -445,4 +445,4 @@ description:    Mellanox ConnectX HCA low-level driver
 author:         Roland Dreier
 rhelversion:    7.4
 {% endhighlight %}
-The driver was successfully installed. However, it doesn't appear to improve performance either! I'll look further into this when I get a chance. 
+The driver was successfully installed. However, it doesn't appear to improve performance either! I'll look further into this when I get a chance.
