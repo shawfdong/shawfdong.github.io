@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Installing TensorFlow with Anaconda
-tags: [GPU, CUDA, Linux, Machine Learning]
+tags: [GPU, CUDA, Linux, Machine Learning, Python]
 ---
 
 In this post, we describe how we installed TensorFlow with Anaconda on the 4-GPU workstation [Hydra]({{ site.baseurl }}{% post_url 2017-7-28-hydra %}).<!-- more -->

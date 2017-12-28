@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Kubernetes Security
-tags: [Docker, Security]
+tags: [Docker, Security, Kubernetes]
 ---
 
 In this post, we take a look at security on the [PRP Kubernetes cluster]({{ site.baseurl }}{% post_url 2017-12-3-k8s %}).<!-- more --> The Kubernetes cluster is experimental/alpha in its current incarnation, so security can be understandably quite lax.

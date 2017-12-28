@@ -3,7 +3,7 @@ layout: default
 ---
 
 <div class="posts">
-  {% for post in site.posts limit:20 %}
+  {% for post in site.posts limit:100 %}
   <article class="post">
     <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
     <span class="date"> {{ post.date | date: "%B %e, %Y" }}</span>

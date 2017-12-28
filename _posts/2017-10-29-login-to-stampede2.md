@@ -24,5 +24,5 @@ $ ssh -l shawdong login.xsede.org
 
 1) Login to Stampede2:
 {% highlight shell_session %}
-$ wget ssh shawdong@stampede2.tacc.utexas.edu
+$ ssh shawdong@stampede2.tacc.utexas.edu
 {% endhighlight %}
