@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Tentakel
-tags: [Linux, Provisioning]
+tags: [Linux, Provisioning, Python]
 ---
 
 **Tentakel** is a program for executing the same command on many hosts in parallel using various remote methods.<!-- more --> Tentakel is bundled with the [Rocks](http://www.rocksclusters.org/wordpress/) cluster toolkit; so it should be familiar to Rocks users. In my humble option, Tentakel has been largely superseded by [Ansible]({{ site.baseurl }}{% post_url 2017-7-13-ansible %}), which can easily do everything Tentakel can, and many more things that Tentakel can't.
