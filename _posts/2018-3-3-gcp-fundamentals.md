@@ -4,7 +4,7 @@ title: Notes for "Google Cloud Platform Fundamentals - Core Infrastructure"
 tags: [Cloud Computing]
 ---
 
-My notes for the course "Google Cloud Platform Fundamentals: Core Infrastructure" on [Coursera](https://www.coursera.org/).<!-- more -->
+My notes for the course "Google Cloud Platform Fundamentals: Core Infrastructure" (Course 1 of "Architecting with Google Cloud Platform") on [Coursera](https://www.coursera.org/).<!-- more -->
 
 ## Labs
 * [Sign Up for the Free Trial and Create a Project](https://codelabs.developers.google.com/codelabs/cp100-free-trial/)
