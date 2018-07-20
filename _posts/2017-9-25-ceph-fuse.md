@@ -200,7 +200,7 @@ the we can manually mount it with:
 {% endhighlight %}
 
 3) Another option to automate mounting of the subdirectory `/hydra` of the CephFS is to use *systemd*. To take this route, we first need to modify the unit file `/usr/lib/systemd/system/ceph-fuse@.service`:
-{% highlight ini %}
+{% highlight conf %}
 [Unit]
 Description=Ceph FUSE client
 After=network-online.target local-fs.target time-sync.target
@@ -229,20 +229,20 @@ Reload systemd manager configuration (because we've made changes to the unit fil
 
 Start the *ceph-fuse* service to mount the subdirectory `/hydra` of the CephFS, at the mountpoint `/mnt/pulpos`:
 {% highlight shell %}
-[root@pulpo-dtn ~]# systemctl start ceph-fuse@/mnt/pulpos.service
+[root@hydra ~]# systemctl start ceph-fuse@/mnt/pulpos.service
 {% endhighlight %}
 
 To create a persistent mount point:
 {% highlight shell %}
-[root@pulpo-dtn ~]# systemctl enable ceph-fuse.target
+[root@hydra ~]# systemctl enable ceph-fuse.target
 
-[root@pulpo-dtn ~]# systemctl enable ceph-fuse@-mnt-pulpos
+[root@hydra ~]# systemctl enable ceph-fuse@-mnt-pulpos
 {% endhighlight %}
 **NOTE** here the command must be `systemctl enable ceph-fuse@-mnt-pulpos`. If we run `systemctl enable ceph-fuse@/mnt/pulpos` instead, we'll get an error "Failed to execute operation: Unit name pulpos is not valid." However, when starting the service, we can run either `systemctl start ceph-fuse@/mnt/pulpos` or `systemctl start ceph-fuse@-mnt-pulpos`!
 
 Lastly, we note the same bug in current version of Luminous (v12.2.1): when CephFS is mounted using *ceph-fuse*, the mount point doesn't show up in the output of `df`; and although we can list the mount point specifically with `df -h /mnt/pulpos`, the size of the filesystem is reported as 0!
 {% highlight shell %}
-[root@pulpo-dtn ~]# df -h /mnt/pulpos
+[root@hydra ~]# df -h /mnt/pulpos
 Filesystem      Size  Used Avail Use% Mounted on
 ceph-fuse          0     0     0    - /mnt/pulpos
 {% endhighlight %}

@@ -225,7 +225,7 @@ $ sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
 </blockquote>
 but where exactly is the 'elsewhere'? After some digging, I find it is `/private/var/db/launchd.db/com.apple.launchd/overrides.plist`.
 
-However, I don't like the default configuration for sshd. I prefer to have password authentication disabled. Add the following options to `/etc/sshd_config`:
+However, I don't like the default configuration for sshd. I prefer to have password authentication disabled. Add the following options to `/etc/ssh/sshd_config`:
 {% highlight conf %}
 PermitRootLogin no
 PasswordAuthentication no
